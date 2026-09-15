@@ -1,0 +1,45 @@
+<div class="auth-shell">
+  <aside class="auth-shell__brand">
+    <div class="auth-shell__grid"></div>
+
+    <div class="auth-shell__brand-content">
+      <div class="auth-shell__logo">
+        <span class="auth-shell__logo-mark"></span>
+        {{ brandName }}
+      </div>
+
+      <div class="auth-shell__headline-block">
+        <h1 class="auth-shell__headline">{{ headline }}</h1>
+        <span class="auth-shell__rule"></span>
+        <p class="auth-shell__tagline">{{ tagline }}</p>
+      </div>
+
+      <dl class="auth-shell__stats">
+        @for (stat of stats; track stat.label) {
+          <div class="auth-shell__stat">
+            <dt>{{ stat.value }}</dt>
+            <dd>{{ stat.label }}</dd>
+          </div>
+        }
+      </dl>
+    </div>
+  </aside>
+
+  <section class="auth-shell__panel">
+    <div class="auth-shell__panel-inner">
+      <header class="auth-shell__topbar">
+        <span>{{ topBarLabel }}</span>
+        <span>{{ topBarMeta }}</span>
+      </header>
+
+      <div class="auth-shell__form-head">
+        <h2>{{ title }}</h2>
+        @if (subtitle) {
+          <p>{{ subtitle }}</p>
+        }
+      </div>
+
+      <ng-content></ng-content>
+    </div>
+  </section>
+</div>

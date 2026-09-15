@@ -1,0 +1,72 @@
+<div class="mx-auto max-w-3xl p-6">
+  <h1 class="text-2xl font-extrabold text-base-content">Usuarios</h1>
+
+  @if (errorMessage()) {
+    <div class="alert alert-error mt-4 text-sm">{{ errorMessage() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="mt-6 flex items-center gap-2 text-sm text-base-content/60">
+      <span class="loading loading-spinner loading-sm"></span>
+      Cargando...
+    </div>
+  } @else {
+    <div class="mt-6 overflow-visible rounded-box border border-base-300 bg-base-100">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>Rol</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (user of users(); track user.id) {
+            <tr>
+              <td>{{ user.email }}</td>
+              <td>
+                @if (user.id === currentUserId) {
+                  <div
+                    class="tooltip"
+                    data-tip="No puedes cambiar tu propio rol"
+                  >
+                    <span class="badge badge-sm badge-primary">{{ user.role }}</span>
+                  </div>
+                } @else {
+                  <div class="dropdown">
+                    <div tabindex="0" role="button" class="btn btn-sm btn-outline gap-2">
+                      <span
+                        class="badge badge-sm"
+                        [class.badge-primary]="user.role === 'admin'"
+                        [class.badge-neutral]="user.role === 'user'"
+                      >
+                        {{ user.role }}
+                      </span>
+                      <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
+                      </svg>
+                    </div>
+                    <ul
+                      tabindex="0"
+                      class="dropdown-content menu z-10 w-40 rounded-box border border-base-300 bg-base-100 p-2 shadow-md"
+                    >
+                      <li>
+                        <a [class.menu-active]="user.role === 'user'" (click)="selectRole($event, user, 'user')">
+                          Usuario
+                        </a>
+                      </li>
+                      <li>
+                        <a [class.menu-active]="user.role === 'admin'" (click)="selectRole($event, user, 'admin')">
+                          Administrador
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

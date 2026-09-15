@@ -1,0 +1,11 @@
+<div class="dashboard-page">
+  <h1>Dashboard</h1>
+  <p class="dashboard-page__subtitle">
+    Bienvenido, {{ supabase.user()?.email }} ({{ profile.profile()?.role ?? 'cargando...' }}).
+  </p>
+
+  <div class="dashboard-page__placeholder">
+    Aquí vivirán los widgets de PPC, Search Terms, Keywords y Listing Builder a medida que
+    construyamos cada módulo.
+  </div>
+</div>

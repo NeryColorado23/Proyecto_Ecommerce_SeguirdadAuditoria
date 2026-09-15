@@ -1,0 +1,26 @@
+# Compiled output
+/dist
+/node_modules
+*.tsbuildinfo
+
+# Logs
+npm-debug.log
+
+# Env
+.env
+.env.local
+
+# IDEs
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Tests
+/coverage
+
+# System files
+.DS_Store
+Thumbs.db
