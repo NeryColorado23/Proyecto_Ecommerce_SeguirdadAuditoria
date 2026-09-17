@@ -74,6 +74,20 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/listings/listings.component').then((m) => m.ListingsComponent),
       },
+      {
+        path: 'keywords',
+        canActivate: [mfaEnforcementGuard],
+        loadComponent: () =>
+          import('./features/keywords/keywords.component').then((m) => m.KeywordsComponent),
+      },
+      {
+        path: 'listing-builder',
+        canActivate: [mfaEnforcementGuard],
+        loadComponent: () =>
+          import('./features/listing-builder/listing-builder.component').then(
+            (m) => m.ListingBuilderComponent,
+          ),
+      },
     ],
   },
   { path: '**', redirectTo: 'login' },

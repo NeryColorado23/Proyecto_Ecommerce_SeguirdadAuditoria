@@ -28,6 +28,14 @@ interface SearchTermRow {
   search_volume: number | null;
 }
 
+interface KeywordRow {
+  id: string;
+  asin: string;
+  keyword: string;
+  organic_rank: number | null;
+  indexed: boolean;
+}
+
 interface PpcReport {
   id: string;
   campaign_name: string;
@@ -44,6 +52,7 @@ const IMPORT_SOURCES: { module: string; label: string; endpoint: string }[] = [
   { module: 'listings', label: 'Listings', endpoint: 'listings/imports' },
   { module: 'search_terms', label: 'Search Terms', endpoint: 'search-terms/imports' },
   { module: 'ppc', label: 'PPC', endpoint: 'ppc/imports' },
+  { module: 'keywords', label: 'Keywords', endpoint: 'keywords/imports' },
 ];
 
 @Component({
@@ -63,6 +72,7 @@ export class DashboardComponent {
   private readonly listings = signal<Listing[]>([]);
   private readonly searchTerms = signal<SearchTermRow[]>([]);
   private readonly ppcReports = signal<PpcReport[]>([]);
+  private readonly keywords = signal<KeywordRow[]>([]);
   readonly recentImports = signal<ImportBatch[]>([]);
 
   readonly listingsCount = computed(() => this.listings().length);
@@ -98,6 +108,9 @@ export class DashboardComponent {
     [...this.ppcReports()].sort((a, b) => Number(b.spend) - Number(a.spend)).slice(0, 5),
   );
 
+  readonly keywordsCount = computed(() => this.keywords().length);
+  readonly keywordsNotIndexed = computed(() => this.keywords().filter((k) => !k.indexed));
+
   constructor() {
     this.refresh();
   }
@@ -126,6 +139,9 @@ export class DashboardComponent {
     this.http
       .get<PpcReport[]>(`${environment.apiUrl}/ppc`)
       .subscribe((data) => this.ppcReports.set(data));
+    this.http
+      .get<KeywordRow[]>(`${environment.apiUrl}/keywords`)
+      .subscribe((data) => this.keywords.set(data));
 
     for (const source of IMPORT_SOURCES) {
       this.http.get<ImportBatch[]>(`${environment.apiUrl}/${source.endpoint}`).subscribe((data) => {

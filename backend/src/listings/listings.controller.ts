@@ -1,7 +1,12 @@
 import {
   BadRequestException,
+  Body,
   Controller,
   Get,
+  NotFoundException,
+  Param,
+  ParseUUIDPipe,
+  Patch,
   Post,
   Req,
   UploadedFile,
@@ -18,6 +23,8 @@ import { SupabaseAuthGuard } from '../auth/supabase-auth.guard.js';
 import { ColumnSpec, buildTemplateWorkbook, parseWorkbook } from '../common/excel.util.js';
 import { ImportBatchesService, RowError } from '../imports/import-batches.service.js';
 import { SupabaseService } from '../supabase/supabase.service.js';
+import { CreateListingDto } from './dto/create-listing.dto.js';
+import { UpdateListingDto } from './dto/update-listing.dto.js';
 
 const COLUMNS: ColumnSpec[] = [
   { header: 'ASIN', key: 'asin', width: 15, example: 'B000000000' },
@@ -37,6 +44,7 @@ export class ListingsController {
   constructor(
     private readonly supabase: SupabaseService,
     private readonly importBatches: ImportBatchesService,
+    private readonly auditLog: AuditLogService,
   ) {}
 
   @Get()
@@ -62,6 +70,81 @@ export class ListingsController {
   @Get('imports')
   listImports() {
     return this.importBatches.listForModule('listings');
+  }
+
+  @Get(':id')
+  async getOne(@Param('id', new ParseUUIDPipe()) id: string) {
+    const { data, error } = await this.supabase.client
+      .from('listings')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (error) {
+      throw new BadRequestException(error.message);
+    }
+    if (!data) {
+      throw new NotFoundException('Listing no encontrado');
+    }
+
+    return data;
+  }
+
+  @Post()
+  async create(
+    @Body() dto: CreateListingDto,
+    @Req() request: Request & { user: AuthenticatedUser },
+  ) {
+    const { data, error } = await this.supabase.client
+      .from('listings')
+      .insert({ ...dto, images: dto.images ?? [] })
+      .select('*')
+      .single();
+
+    if (error) {
+      throw new BadRequestException(error.message);
+    }
+
+    await this.auditLog.record({
+      userId: request.user.id,
+      action: 'listing_created',
+      entityType: 'listing',
+      entityId: dto.asin,
+      ipAddress: AuditLogService.extractIp(request),
+    });
+
+    return data;
+  }
+
+  @Patch(':id')
+  async update(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body() dto: UpdateListingDto,
+    @Req() request: Request & { user: AuthenticatedUser },
+  ) {
+    const { data, error } = await this.supabase.client
+      .from('listings')
+      .update(dto)
+      .eq('id', id)
+      .select('*')
+      .maybeSingle();
+
+    if (error) {
+      throw new BadRequestException(error.message);
+    }
+    if (!data) {
+      throw new NotFoundException('Listing no encontrado');
+    }
+
+    await this.auditLog.record({
+      userId: request.user.id,
+      action: 'listing_updated',
+      entityType: 'listing',
+      entityId: data['asin'],
+      ipAddress: AuditLogService.extractIp(request),
+    });
+
+    return data;
   }
 
   @Roles('admin')

@@ -33,6 +33,11 @@
         <div class="stat-value">{{ ppcTotals().sales | currency }}</div>
         <div class="stat-desc">{{ ppcTotals().orders }} pedidos</div>
       </div>
+      <div class="stat">
+        <div class="stat-title">Keywords</div>
+        <div class="stat-value text-primary">{{ keywordsCount() }}</div>
+        <div class="stat-desc">{{ keywordsNotIndexed().length }} sin indexar</div>
+      </div>
     </div>
 
     <div class="mt-6 grid gap-6 lg:grid-cols-2">
@@ -95,23 +100,44 @@
       </div>
     </div>
 
-    <div class="mt-6 rounded-box border border-base-300 bg-base-100 p-4">
-      <div class="mb-3 flex items-center justify-between">
-        <h2 class="font-bold text-base-content">Listings sin completar</h2>
-        <a routerLink="/listings" class="link text-xs">Ver todos →</a>
+    <div class="mt-6 grid gap-6 lg:grid-cols-2">
+      <div class="rounded-box border border-base-300 bg-base-100 p-4">
+        <div class="mb-3 flex items-center justify-between">
+          <h2 class="font-bold text-base-content">Listings sin completar</h2>
+          <a routerLink="/listings" class="link text-xs">Ver todos →</a>
+        </div>
+        @if (incompleteListings().length === 0) {
+          <p class="text-sm text-base-content/60">Todos los listings cargados están completos.</p>
+        } @else {
+          <ul class="flex flex-col gap-1 text-sm">
+            @for (listing of incompleteListings().slice(0, 5); track listing.id) {
+              <li class="flex items-center justify-between border-b border-base-200 py-1 last:border-0">
+                <span class="font-mono text-xs">{{ listing.asin }}</span>
+                <span class="max-w-64 truncate text-base-content/70">{{ listing.title || 'Sin título' }}</span>
+              </li>
+            }
+          </ul>
+        }
       </div>
-      @if (incompleteListings().length === 0) {
-        <p class="text-sm text-base-content/60">Todos los listings cargados están completos.</p>
-      } @else {
-        <ul class="flex flex-col gap-1 text-sm">
-          @for (listing of incompleteListings().slice(0, 5); track listing.id) {
-            <li class="flex items-center justify-between border-b border-base-200 py-1 last:border-0">
-              <span class="font-mono text-xs">{{ listing.asin }}</span>
-              <span class="max-w-64 truncate text-base-content/70">{{ listing.title || 'Sin título' }}</span>
-            </li>
-          }
-        </ul>
-      }
+
+      <div class="rounded-box border border-base-300 bg-base-100 p-4">
+        <div class="mb-3 flex items-center justify-between">
+          <h2 class="font-bold text-base-content">Keywords sin indexar</h2>
+          <a routerLink="/keywords" class="link text-xs">Ver todos →</a>
+        </div>
+        @if (keywordsNotIndexed().length === 0) {
+          <p class="text-sm text-base-content/60">Todos los keywords cargados están indexados.</p>
+        } @else {
+          <ul class="flex flex-col gap-1 text-sm">
+            @for (kw of keywordsNotIndexed().slice(0, 5); track kw.id) {
+              <li class="flex items-center justify-between border-b border-base-200 py-1 last:border-0">
+                <span class="font-mono text-xs">{{ kw.asin }}</span>
+                <span class="max-w-64 truncate text-base-content/70">{{ kw.keyword }}</span>
+              </li>
+            }
+          </ul>
+        }
+      </div>
     </div>
 
     <div class="mt-6">

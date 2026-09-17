@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service.js';
 
-export type ImportModule = 'listings' | 'search_terms' | 'ppc';
+export type ImportModule = 'listings' | 'search_terms' | 'ppc' | 'keywords';
 
 export interface RowError {
   row: number;

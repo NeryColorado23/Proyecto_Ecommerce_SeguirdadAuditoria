@@ -77,13 +77,8 @@
           <span>Listings</span>
         }
       </a>
-    </nav>
 
-    @if (!collapsed()) {
-      <div class="shell__section-label">Próximamente</div>
-    }
-    <nav class="shell__nav shell__nav--disabled">
-      <span class="shell__nav-link is-disabled">
+      <a routerLink="/keywords" routerLinkActive="is-active" class="shell__nav-link">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path
             d="M20 12l-8 8-9-9V4h7l9 9z"
@@ -95,15 +90,16 @@
         @if (!collapsed()) {
           <span>Keywords</span>
         }
-      </span>
-      <span class="shell__nav-link is-disabled">
+      </a>
+
+      <a routerLink="/listing-builder" routerLinkActive="is-active" class="shell__nav-link">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M12 4v16M4 12h16" stroke-linecap="round" />
         </svg>
         @if (!collapsed()) {
           <span>Listing Builder</span>
         }
-      </span>
+      </a>
     </nav>
 
     <nav class="shell__nav">
