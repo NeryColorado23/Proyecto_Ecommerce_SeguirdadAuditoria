@@ -46,4 +46,28 @@ export class SupabaseService {
   resetPasswordForEmail(email: string, redirectTo: string) {
     return this.client.auth.resetPasswordForEmail(email, { redirectTo });
   }
+
+  enrollMfa() {
+    return this.client.auth.mfa.enroll({ factorType: 'totp' });
+  }
+
+  challengeMfa(factorId: string) {
+    return this.client.auth.mfa.challenge({ factorId });
+  }
+
+  verifyMfa(factorId: string, challengeId: string, code: string) {
+    return this.client.auth.mfa.verify({ factorId, challengeId, code });
+  }
+
+  unenrollMfa(factorId: string) {
+    return this.client.auth.mfa.unenroll({ factorId });
+  }
+
+  listMfaFactors() {
+    return this.client.auth.mfa.listFactors();
+  }
+
+  getAuthenticatorAssuranceLevel() {
+    return this.client.auth.mfa.getAuthenticatorAssuranceLevel();
+  }
 }

@@ -1,0 +1,60 @@
+<div class="p-6">
+  <h1 class="mb-4 text-2xl font-extrabold text-base-content">Listings</h1>
+
+  <app-import-uploader
+    [importUrl]="importUrl"
+    [templateUrl]="templateUrl"
+    [canImport]="profile.isAdmin()"
+    (imported)="onImported()"
+  />
+
+  <div class="mt-6">
+    @if (loading()) {
+      <div class="flex items-center gap-2 text-sm text-base-content/60">
+        <span class="loading loading-spinner loading-sm"></span>
+        Cargando...
+      </div>
+    } @else if (listings().length === 0) {
+      <p class="text-sm text-base-content/60">Todavía no hay listings cargados.</p>
+    } @else {
+      <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Imagen</th>
+              <th>ASIN</th>
+              <th>Título</th>
+              <th>Bullets</th>
+              <th>Descripción</th>
+              <th>Actualizado</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (listing of listings(); track listing.id) {
+              <tr>
+                <td>
+                  @if (listing.images[0]) {
+                    <img [src]="listing.images[0]" class="h-12 w-12 rounded object-cover" alt="" />
+                  } @else {
+                    <div class="h-12 w-12 rounded bg-base-200"></div>
+                  }
+                </td>
+                <td class="whitespace-nowrap font-mono text-xs">{{ listing.asin }}</td>
+                <td class="max-w-56 truncate">{{ listing.title }}</td>
+                <td class="max-w-72 truncate text-xs text-base-content/70">
+                  {{ bulletsPreview(listing) }}
+                </td>
+                <td class="max-w-72 truncate text-xs text-base-content/70">
+                  {{ listing.description }}
+                </td>
+                <td class="whitespace-nowrap text-xs">{{ listing.updated_at | date: 'short' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+
+  <app-import-history [batches]="batches()" />
+</div>

@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthLayoutComponent } from '../../../shared/ui/auth-layout/auth-layout.component';
+import { AuditService } from '../../../core/audit.service';
 import { SupabaseService } from '../../../core/supabase.service';
 
 @Component({
@@ -14,6 +15,7 @@ import { SupabaseService } from '../../../core/supabase.service';
 export class LoginComponent {
   private readonly fb = inject(FormBuilder);
   private readonly supabase = inject(SupabaseService);
+  private readonly audit = inject(AuditService);
   private readonly router = inject(Router);
 
   readonly loading = signal(false);
@@ -44,6 +46,13 @@ export class LoginComponent {
       return;
     }
 
+    const { data: aal } = await this.supabase.getAuthenticatorAssuranceLevel();
+    if (aal && aal.nextLevel === 'aal2' && aal.currentLevel !== 'aal2') {
+      await this.router.navigateByUrl('/mfa-verify');
+      return;
+    }
+
+    this.audit.logLogin();
     await this.router.navigateByUrl('/dashboard');
   }
 

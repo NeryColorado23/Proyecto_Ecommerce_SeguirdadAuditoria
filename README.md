@@ -1,12 +1,14 @@
 # Amazon PPC Manager
 
 Monorepo con frontend (Angular), backend (NestJS) y Supabase como base de datos/auth.
-Módulos planeados: Login, PPC Dashboard, Search Terms, Keywords, Listing Builder.
+Módulos: Login (+ 2FA), Dashboard, PPC, Search Terms, Listings, Administración (roles + auditoría).
+Pendientes: Keywords, Listing Builder.
 
 ## Estructura
 
-- `frontend/` — Angular 22 (standalone components + signals), cliente Supabase directo para auth.
-- `backend/` — NestJS 12, expone API propia para los módulos de Amazon Ads (protegida con guard de Supabase).
+- `frontend/` — Angular 22 (standalone components + signals) + Tailwind CSS + DaisyUI, cliente Supabase directo para auth/MFA.
+- `backend/` — NestJS 12, expone API propia para los módulos de datos (PPC/Search Terms/Listings/Admin/Audit), protegida con guard de Supabase.
+- `supabase/` — esquema SQL a correr en el SQL Editor del dashboard (`schema.sql` → roles, `modules.sql` → datos de PPC/Search Terms/Listings, `audit.sql` → bitácora de auditoría). Correr en ese orden.
 
 ## 1. Crear el proyecto de Supabase
 
@@ -50,5 +52,16 @@ Por defecto corre en el puerto definido en `PORT` (`.env.example` trae `3300` pa
 ## Notas de arquitectura
 
 - El login/registro/forgot-password se hace directo contra Supabase Auth desde Angular (`SupabaseService`), sin pasar por el backend.
-- El backend valida tokens de Supabase (`SupabaseAuthGuard`) para proteger los endpoints propios que se agregarán con los módulos de PPC/Search Terms/Keywords/Listing Builder.
-- El estilo visual de las pantallas de auth vive en `frontend/src/app/shared/ui/auth-layout/` (layout split-screen reutilizable) y en las clases `.auth-*` de `frontend/src/styles.scss`.
+- El backend valida tokens de Supabase (`SupabaseAuthGuard`) para proteger los endpoints propios de PPC/Search Terms/Listings/Admin/Audit.
+- El estilo visual de las pantallas de auth vive en `frontend/src/app/shared/ui/auth-layout/` (layout split-screen reutilizable) y en las clases `.auth-*` de `frontend/src/styles.scss`. Los módulos de datos usan Tailwind + DaisyUI directamente.
+- Carga masiva de datos: cada módulo (Listings/Search Terms/PPC) tiene plantilla Excel descargable, importación con `upsert` por clave natural, y queda registrada en `import_batches` (control de lo subido).
+
+## Seguridad implementada
+
+- **Roles (RBAC)**: tabla `profiles` con `admin`/`user`, RLS en Supabase, guards en frontend (`admin.guard.ts`) y backend (`RolesGuard` + `@Roles()`). Un admin no puede cambiar su propio rol.
+- **MFA/2FA (TOTP)**: vía `supabase.auth.mfa` nativo. Cualquier usuario puede activarlo desde "Seguridad (2FA)" en el sidebar; es **obligatorio** para el rol `admin` (`mfaEnforcementGuard` fuerza `/mfa-setup` si no lo tiene activo).
+- **Bitácora de auditoría inmutable** (`audit_log`): registra login y cambios de rol con usuario, IP y timestamp. Solo lectura para admins (visible en `/admin`), sin permiso de update/delete desde la API.
+- **Rate limiting**: `@nestjs/throttler` (100 req/min por IP) en toda la API del backend.
+- **Cabeceras de seguridad HTTP**: `helmet` en el backend (X-Content-Type-Options, X-Frame-Options, etc.).
+- **Anti-inyección de fórmulas en Excel/CSV**: cualquier valor cargado que empiece con `=`, `+`, `-`, `@`, tab o CR se neutraliza (se antepone `'`) antes de guardarse, para prevenir CSV/Formula Injection si esos datos se vuelven a exportar y abrir en Excel.
+- **Cadena de suministro**: `npm run security:audit` (falla si hay vulnerabilidades altas/críticas) y `npm run sbom` (genera `sbom.json` en formato CycloneDX) en `frontend/` y `backend/`. Automatizado en cada push/PR vía `.github/workflows/security.yml`.

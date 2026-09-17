@@ -1,0 +1,41 @@
+<app-auth-layout
+  title="Verificación en dos pasos"
+  subtitle="Ingresa el código de tu app de autenticación."
+>
+  @if (errorMessage() && !ready()) {
+    <div class="auth-form__error" role="alert">{{ errorMessage() }}</div>
+    <button type="button" class="auth-field__link" (click)="cancel()">Cerrar sesión</button>
+  } @else {
+    <form class="auth-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      @if (errorMessage()) {
+        <div class="auth-form__error" role="alert">{{ errorMessage() }}</div>
+      }
+
+      <div class="auth-field">
+        <label for="code">Código de 6 dígitos</label>
+        <input
+          id="code"
+          type="text"
+          inputmode="numeric"
+          maxlength="6"
+          formControlName="code"
+          autocomplete="one-time-code"
+          placeholder="123456"
+        />
+      </div>
+
+      <button class="auth-submit" type="submit" [disabled]="loading() || !ready()">
+        {{ loading() ? 'Verificando...' : 'Verificar' }}
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </button>
+
+      <p class="auth-footer">
+        <button type="button" class="auth-field__link" (click)="cancel()">
+          Cancelar y cerrar sesión
+        </button>
+      </p>
+    </form>
+  }
+</app-auth-layout>

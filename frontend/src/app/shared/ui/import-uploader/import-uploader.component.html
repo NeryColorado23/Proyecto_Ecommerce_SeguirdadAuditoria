@@ -1,0 +1,50 @@
+<div class="rounded-box border border-base-300 bg-base-100 p-4">
+  <div class="flex flex-wrap items-center gap-3">
+    <button type="button" class="btn btn-sm btn-outline" (click)="downloadTemplate()">
+      Descargar plantilla
+    </button>
+
+    @if (canImport) {
+      <input
+        type="file"
+        accept=".xlsx"
+        class="file-input file-input-sm file-input-bordered max-w-xs"
+        (change)="onFileSelected($event)"
+      />
+      <button
+        type="button"
+        class="btn btn-sm btn-primary"
+        [disabled]="!selectedFile || uploading()"
+        (click)="upload()"
+      >
+        {{ uploading() ? 'Subiendo...' : 'Subir archivo' }}
+      </button>
+    } @else {
+      <span class="text-xs text-base-content/60">Solo un administrador puede subir datos.</span>
+    }
+  </div>
+
+  @if (errorMessage()) {
+    <div class="alert alert-error mt-3 text-sm">{{ errorMessage() }}</div>
+  }
+
+  @if (result(); as r) {
+    <div
+      class="alert mt-3 text-sm"
+      [class.alert-success]="r.errorCount === 0"
+      [class.alert-warning]="r.errorCount > 0"
+    >
+      {{ r.successCount }} de {{ r.rowCount }} filas cargadas correctamente.
+      @if (r.errorCount > 0) {
+        <span>{{ r.errorCount }} con errores.</span>
+      }
+    </div>
+    @if (r.errors.length > 0) {
+      <ul class="mt-2 max-h-32 overflow-y-auto text-xs text-error">
+        @for (e of r.errors; track e.row) {
+          <li>Fila {{ e.row }}: {{ e.message }}</li>
+        }
+      </ul>
+    }
+  }
+</div>

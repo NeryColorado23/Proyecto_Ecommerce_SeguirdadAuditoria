@@ -11,6 +11,9 @@
 npm-debug.log
 yarn-error.log
 
+# SBOM generado (npm run sbom) - se regenera en cada CI run, no se versiona
+sbom.json
+
 # IDEs and editors
 .idea/
 .project

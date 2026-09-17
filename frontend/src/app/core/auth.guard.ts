@@ -7,11 +7,16 @@ export const authGuard: CanActivateFn = async () => {
   const router = inject(Router);
 
   const { data } = await supabase.client.auth.getSession();
-  if (data.session) {
-    return true;
+  if (!data.session) {
+    return router.createUrlTree(['/login']);
   }
 
-  return router.createUrlTree(['/login']);
+  const { data: aal } = await supabase.getAuthenticatorAssuranceLevel();
+  if (aal && aal.nextLevel === 'aal2' && aal.currentLevel !== 'aal2') {
+    return router.createUrlTree(['/mfa-verify']);
+  }
+
+  return true;
 };
 
 export const guestGuard: CanActivateFn = async () => {

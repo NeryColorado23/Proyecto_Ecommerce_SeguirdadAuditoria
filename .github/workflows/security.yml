@@ -1,0 +1,56 @@
+name: Security checks
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  backend:
+    name: Backend - audit + SBOM
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - name: Install dependencies
+        working-directory: backend
+        run: npm ci
+      - name: Dependency vulnerability scan (fails on high/critical)
+        working-directory: backend
+        run: npm run security:audit
+      - name: Generate SBOM (CycloneDX)
+        working-directory: backend
+        run: npm run sbom
+      - uses: actions/upload-artifact@v4
+        with:
+          name: backend-sbom
+          path: backend/sbom.json
+
+  frontend:
+    name: Frontend - audit + SBOM
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+      - name: Dependency vulnerability scan (fails on high/critical)
+        working-directory: frontend
+        run: npm run security:audit
+      - name: Generate SBOM (CycloneDX)
+        working-directory: frontend
+        run: npm run sbom
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frontend-sbom
+          path: frontend/sbom.json

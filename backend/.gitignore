@@ -3,6 +3,9 @@
 /node_modules
 *.tsbuildinfo
 
+# SBOM generado (npm run sbom) - se regenera en cada CI run, no se versiona
+sbom.json
+
 # Logs
 npm-debug.log
 

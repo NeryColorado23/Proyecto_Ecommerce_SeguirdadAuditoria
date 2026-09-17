@@ -10,6 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Request } from 'express';
+import { AuditLogService } from '../audit/audit-log.service.js';
 import type { AppRole, AuthenticatedUser } from '../auth/current-user.js';
 import { Roles } from '../auth/roles.decorator.js';
 import { RolesGuard } from '../auth/roles.guard.js';
@@ -22,7 +23,10 @@ const VALID_ROLES: AppRole[] = ['admin', 'user'];
 @Roles('admin')
 @Controller('admin')
 export class AdminController {
-  constructor(private readonly supabase: SupabaseService) {}
+  constructor(
+    private readonly supabase: SupabaseService,
+    private readonly auditLog: AuditLogService,
+  ) {}
 
   @Get('users')
   async listUsers() {
@@ -62,6 +66,15 @@ export class AdminController {
     if (error) {
       throw new BadRequestException(error.message);
     }
+
+    await this.auditLog.record({
+      userId: request.user.id,
+      action: 'role_change',
+      entityType: 'profile',
+      entityId: id,
+      ipAddress: AuditLogService.extractIp(request),
+      metadata: { newRole: role },
+    });
 
     return data;
   }

@@ -1,0 +1,45 @@
+<div class="mt-4">
+  <h2 class="mb-2 text-sm font-bold text-base-content/70">{{ title }}</h2>
+
+  @if (batches.length === 0) {
+    <p class="text-sm text-base-content/60">Todavía no hay cargas registradas.</p>
+  } @else {
+    <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            @if (showModule) {
+              <th>Módulo</th>
+            }
+            <th>Archivo</th>
+            <th>Fecha</th>
+            <th>Filas</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (batch of batches; track batch.id) {
+            <tr>
+              @if (showModule) {
+                <td>{{ batch.moduleLabel }}</td>
+              }
+              <td>{{ batch.file_name }}</td>
+              <td>{{ batch.created_at | date: 'short' }}</td>
+              <td>{{ batch.success_count }}/{{ batch.row_count }}</td>
+              <td>
+                <span
+                  class="badge badge-sm"
+                  [class.badge-success]="batch.status === 'completed'"
+                  [class.badge-warning]="batch.status === 'completed_with_errors'"
+                  [class.badge-error]="batch.status === 'failed'"
+                >
+                  {{ batch.status }}
+                </span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
