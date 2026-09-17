@@ -11,6 +11,7 @@ import { ListingsModule } from './listings/listings.module.js';
 import { SearchTermsModule } from './search-terms/search-terms.module.js';
 import { PpcModule } from './ppc/ppc.module.js';
 import { AuditModule } from './audit/audit.module.js';
+import { MfaModule } from './mfa/mfa.module.js';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { AuditModule } from './audit/audit.module.js';
     ListingsModule,
     SearchTermsModule,
     PpcModule,
+    MfaModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],

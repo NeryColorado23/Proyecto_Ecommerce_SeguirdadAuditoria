@@ -1,5 +1,8 @@
 <app-auth-layout title="Iniciar sesión" subtitle="Usa tu cuenta de equipo.">
   <form class="auth-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    @if (infoMessage()) {
+      <div class="auth-form__success" role="status">{{ infoMessage() }}</div>
+    }
     @if (errorMessage()) {
       <div class="auth-form__error" role="alert">{{ errorMessage() }}</div>
     }

@@ -9,4 +9,10 @@ export class AuditService {
   logLogin(): void {
     this.http.post(`${environment.apiUrl}/audit/login`, {}).subscribe({ error: () => {} });
   }
+
+  logFailedLogin(email: string): void {
+    this.http
+      .post(`${environment.apiUrl}/audit/failed-login`, { email })
+      .subscribe({ error: () => {} });
+  }
 }

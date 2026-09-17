@@ -1,6 +1,8 @@
+import { HttpClient } from '@angular/common/http';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { environment } from '../../../../environments/environment';
 import { SupabaseService } from '../../../core/supabase.service';
 import { AuthLayoutComponent } from '../../../shared/ui/auth-layout/auth-layout.component';
 
@@ -18,6 +20,7 @@ interface EnrolledFactor {
 export class MfaSetupComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly supabase = inject(SupabaseService);
+  private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
@@ -29,6 +32,7 @@ export class MfaSetupComponent implements OnInit {
   readonly qrCode = signal<string | null>(null);
   readonly secret = signal<string | null>(null);
   readonly enrolledFactors = signal<EnrolledFactor[]>([]);
+  readonly recoveryCodes = signal<string[] | null>(null);
 
   private factorId = '';
 
@@ -75,9 +79,8 @@ export class MfaSetupComponent implements OnInit {
     const { code } = this.form.getRawValue();
     const { error } = await this.supabase.verifyMfa(this.factorId, challenge.id, code);
 
-    this.loading.set(false);
-
     if (error) {
+      this.loading.set(false);
       this.errorMessage.set(
         'Código incorrecto. Verifica la hora de tu dispositivo e intenta de nuevo.',
       );
@@ -89,7 +92,36 @@ export class MfaSetupComponent implements OnInit {
     this.form.reset();
     this.successMessage.set('Verificación en dos pasos activada correctamente.');
     await this.loadFactors();
+    await this.generateRecoveryCodes();
+    this.loading.set(false);
+  }
 
+  async generateRecoveryCodes(): Promise<void> {
+    this.http
+      .post<{ codes: string[] }>(`${environment.apiUrl}/mfa/recovery-codes`, {})
+      .subscribe({
+        next: ({ codes }) => this.recoveryCodes.set(codes),
+        error: () =>
+          this.errorMessage.set('No se pudieron generar los códigos de recuperación.'),
+      });
+  }
+
+  downloadRecoveryCodes(): void {
+    const codes = this.recoveryCodes();
+    if (!codes) {
+      return;
+    }
+    const blob = new Blob([codes.join('\n') + '\n'], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'codigos-recuperacion-2fa.txt';
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async acknowledgeRecoveryCodes(): Promise<void> {
+    this.recoveryCodes.set(null);
     if (this.required) {
       await this.router.navigateByUrl('/dashboard');
     }

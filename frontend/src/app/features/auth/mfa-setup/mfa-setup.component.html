@@ -15,54 +15,81 @@
     <div class="auth-form__error" role="alert">{{ errorMessage() }}</div>
   }
 
-  @if (enrolledFactors().length > 0) {
+  @if (recoveryCodes(); as codes) {
     <div class="auth-form">
-      <p class="text-xs text-base-content/60">Ya tienes un método activo.</p>
-      @for (factor of enrolledFactors(); track factor.id) {
-        <div class="auth-checkbox justify-between">
-          <span>Autenticador ({{ factor.status }})</span>
-          <button type="button" class="auth-field__link" (click)="removeFactor(factor.id)">
-            Quitar
-          </button>
-        </div>
-      }
+      <div class="auth-form__success" role="status">
+        Guarda estos códigos en un lugar seguro. Cada uno funciona una sola vez y te dejan
+        entrar si pierdes tu dispositivo autenticador. No se volverán a mostrar.
+      </div>
+      <div class="grid grid-cols-2 gap-2 rounded-box border border-base-300 bg-base-200 p-3 font-mono text-sm">
+        @for (c of codes; track c) {
+          <span>{{ c }}</span>
+        }
+      </div>
+      <button type="button" class="auth-oauth" (click)="downloadRecoveryCodes()">
+        Descargar códigos (.txt)
+      </button>
+      <button
+        type="button"
+        class="auth-submit justify-center"
+        (click)="acknowledgeRecoveryCodes()"
+      >
+        Ya los guardé, continuar
+      </button>
     </div>
-  }
-
-  @if (!qrCode() && enrolledFactors().length === 0) {
-    <button class="auth-submit justify-center" type="button" (click)="startEnrollment()">
-      Generar código QR
-    </button>
-  }
-
-  @if (qrCode()) {
-    <div class="auth-form">
-      <img [src]="qrCode()" alt="Código QR para 2FA" class="mx-auto h-44 w-44" />
-      <p class="text-center text-xs text-base-content/60">
-        Si no puedes escanear el código, ingresa esta clave manualmente:
-      </p>
-      <code class="text-center text-xs">{{ secret() }}</code>
-
-      <form [formGroup]="form" (ngSubmit)="confirmEnrollment()" novalidate>
-        <div class="auth-field">
-          <label for="code">Código de verificación</label>
-          <input
-            id="code"
-            type="text"
-            inputmode="numeric"
-            maxlength="6"
-            formControlName="code"
-            placeholder="123456"
-          />
-        </div>
-        <button class="auth-submit mt-3" type="submit" [disabled]="loading()">
-          {{ loading() ? 'Verificando...' : 'Confirmar' }}
+  } @else {
+    @if (enrolledFactors().length > 0) {
+      <div class="auth-form">
+        <p class="text-xs text-base-content/60">Ya tienes un método activo.</p>
+        @for (factor of enrolledFactors(); track factor.id) {
+          <div class="auth-checkbox justify-between">
+            <span>Autenticador ({{ factor.status }})</span>
+            <button type="button" class="auth-field__link" (click)="removeFactor(factor.id)">
+              Quitar
+            </button>
+          </div>
+        }
+        <button type="button" class="auth-field__link text-left" (click)="generateRecoveryCodes()">
+          Generar nuevos códigos de recuperación
         </button>
-      </form>
-    </div>
-  }
+      </div>
+    }
 
-  @if (!required) {
-    <p class="auth-footer"><a routerLink="/dashboard">Volver al dashboard</a></p>
+    @if (!qrCode() && enrolledFactors().length === 0) {
+      <button class="auth-submit justify-center" type="button" (click)="startEnrollment()">
+        Generar código QR
+      </button>
+    }
+
+    @if (qrCode()) {
+      <div class="auth-form">
+        <img [src]="qrCode()" alt="Código QR para 2FA" class="mx-auto h-44 w-44" />
+        <p class="text-center text-xs text-base-content/60">
+          Si no puedes escanear el código, ingresa esta clave manualmente:
+        </p>
+        <code class="text-center text-xs">{{ secret() }}</code>
+
+        <form [formGroup]="form" (ngSubmit)="confirmEnrollment()" novalidate>
+          <div class="auth-field">
+            <label for="code">Código de verificación</label>
+            <input
+              id="code"
+              type="text"
+              inputmode="numeric"
+              maxlength="6"
+              formControlName="code"
+              placeholder="123456"
+            />
+          </div>
+          <button class="auth-submit mt-3" type="submit" [disabled]="loading()">
+            {{ loading() ? 'Verificando...' : 'Confirmar' }}
+          </button>
+        </form>
+      </div>
+    }
+
+    @if (!required) {
+      <p class="auth-footer"><a routerLink="/dashboard">Volver al dashboard</a></p>
+    }
   }
 </app-auth-layout>

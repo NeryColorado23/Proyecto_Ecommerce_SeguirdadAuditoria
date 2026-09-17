@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthLayoutComponent } from '../../../shared/ui/auth-layout/auth-layout.component';
 import { AuditService } from '../../../core/audit.service';
 import { SupabaseService } from '../../../core/supabase.service';
@@ -17,10 +17,16 @@ export class LoginComponent {
   private readonly supabase = inject(SupabaseService);
   private readonly audit = inject(AuditService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   readonly loading = signal(false);
   readonly googleLoading = signal(false);
   readonly errorMessage = signal<string | null>(null);
+  readonly infoMessage = signal<string | null>(
+    this.route.snapshot.queryParamMap.get('reason') === 'idle'
+      ? 'Tu sesión se cerró por inactividad. Vuelve a iniciar sesión.'
+      : null,
+  );
 
   readonly form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
@@ -43,6 +49,7 @@ export class LoginComponent {
 
     if (error) {
       this.errorMessage.set(this.mapError(error.message));
+      this.audit.logFailedLogin(email);
       return;
     }
 

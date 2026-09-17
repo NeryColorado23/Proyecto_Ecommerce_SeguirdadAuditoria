@@ -3,7 +3,7 @@ import { Request } from 'express';
 import { SupabaseService } from '../supabase/supabase.service.js';
 
 export interface AuditEntry {
-  userId: string;
+  userId: string | null;
   action: string;
   entityType?: string;
   entityId?: string;

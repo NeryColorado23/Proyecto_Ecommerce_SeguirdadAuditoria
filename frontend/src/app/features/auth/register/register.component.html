@@ -30,6 +30,15 @@
         autocomplete="new-password"
         placeholder="••••••••"
       />
+      @if (form.controls.password.touched && form.controls.password.invalid) {
+        <span class="auth-field__hint">
+          Mínimo 8 caracteres, con mayúscula, minúscula y número.
+        </span>
+      } @else {
+        <span class="text-xs text-base-content/50">
+          Mínimo 8 caracteres, con mayúscula, minúscula y número.
+        </span>
+      }
     </div>
 
     <button class="auth-submit" type="submit" [disabled]="loading()">

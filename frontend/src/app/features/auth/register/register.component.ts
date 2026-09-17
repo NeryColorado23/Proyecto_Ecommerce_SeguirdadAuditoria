@@ -3,6 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthLayoutComponent } from '../../../shared/ui/auth-layout/auth-layout.component';
 import { SupabaseService } from '../../../core/supabase.service';
+import { strongPasswordValidator } from '../../../shared/validators/strong-password.validator';
 
 @Component({
   selector: 'app-register',
@@ -20,7 +21,7 @@ export class RegisterComponent {
 
   readonly form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(6)]],
+    password: ['', [Validators.required, Validators.minLength(8), strongPasswordValidator()]],
   });
 
   async submit(): Promise<void> {

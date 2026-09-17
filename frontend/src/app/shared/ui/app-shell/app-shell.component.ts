@@ -1,5 +1,6 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { IdleService } from '../../../core/idle.service';
 import { ProfileService } from '../../../core/profile.service';
 import { SupabaseService } from '../../../core/supabase.service';
 
@@ -12,12 +13,21 @@ const STORAGE_KEY = 'sidebar-collapsed';
   templateUrl: './app-shell.component.html',
   styleUrl: './app-shell.component.scss',
 })
-export class AppShellComponent {
+export class AppShellComponent implements OnInit, OnDestroy {
   protected readonly supabase = inject(SupabaseService);
   protected readonly profile = inject(ProfileService);
+  private readonly idle = inject(IdleService);
   private readonly router = inject(Router);
 
   readonly collapsed = signal(this.readStoredCollapsed());
+
+  ngOnInit(): void {
+    this.idle.start();
+  }
+
+  ngOnDestroy(): void {
+    this.idle.stop();
+  }
 
   toggleCollapsed(): void {
     this.collapsed.update((value) => {

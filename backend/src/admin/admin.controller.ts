@@ -5,19 +5,19 @@ import {
   ForbiddenException,
   Get,
   Param,
+  ParseUUIDPipe,
   Patch,
   Req,
   UseGuards,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { AuditLogService } from '../audit/audit-log.service.js';
-import type { AppRole, AuthenticatedUser } from '../auth/current-user.js';
+import type { AuthenticatedUser } from '../auth/current-user.js';
 import { Roles } from '../auth/roles.decorator.js';
 import { RolesGuard } from '../auth/roles.guard.js';
 import { SupabaseAuthGuard } from '../auth/supabase-auth.guard.js';
 import { SupabaseService } from '../supabase/supabase.service.js';
-
-const VALID_ROLES: AppRole[] = ['admin', 'user'];
+import { UpdateRoleDto } from './dto/update-role.dto.js';
 
 @UseGuards(SupabaseAuthGuard, RolesGuard)
 @Roles('admin')
@@ -44,14 +44,10 @@ export class AdminController {
 
   @Patch('users/:id/role')
   async updateRole(
-    @Param('id') id: string,
-    @Body('role') role: AppRole,
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body() { role }: UpdateRoleDto,
     @Req() request: Request & { user: AuthenticatedUser },
   ) {
-    if (!VALID_ROLES.includes(role)) {
-      throw new BadRequestException('Invalid role');
-    }
-
     if (request.user.id === id) {
       throw new ForbiddenException('No puedes cambiar tu propio rol');
     }
