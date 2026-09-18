@@ -71,7 +71,9 @@ Por defecto corre en el puerto definido en `PORT` (`.env.example` trae `3300` pa
 
 ### Backend en Render
 
-El repo incluye `render.yaml` (Blueprint) con la configuración lista: build `npm install && npm run build`, arranque `npm run start:prod`, health check en `/`, y detección correcta de la IP real del cliente detrás del proxy de Render (`trust proxy`) — sin esto, la bitácora de auditoría y el rate limiting verían a todos los usuarios como una sola IP.
+El repo incluye `render.yaml` (Blueprint) con la configuración lista: build `npm install --include=dev && npm run build`, arranque `npm run start:prod`, health check en `/`, y detección correcta de la IP real del cliente detrás del proxy de Render (`trust proxy`) — sin esto, la bitácora de auditoría y el rate limiting verían a todos los usuarios como una sola IP.
+
+> **Ojo con `--include=dev` en el Build Command**: como `NODE_ENV=production` queda seteado como variable de entorno, `npm install` a secas se salta las `devDependencies` — y ahí vive `@nestjs/cli`, que provee el comando `nest` usado para compilar. Sin `--include=dev` el build falla con `nest: not found`.
 
 1. Sube el repo a GitHub (o el remoto que estés usando).
 2. En [Render Dashboard](https://dashboard.render.com) → **New → Blueprint**, apunta al repo. Render detecta `render.yaml` automáticamente.

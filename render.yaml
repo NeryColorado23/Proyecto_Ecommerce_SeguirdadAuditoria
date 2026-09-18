@@ -5,7 +5,10 @@ services:
     rootDir: backend
     plan: free
     region: oregon
-    buildCommand: npm install && npm run build
+    # --include=dev es necesario: NODE_ENV=production (abajo) hace que
+    # "npm install" a secas se salte las devDependencies, y ahí vive
+    # @nestjs/cli (el comando "nest" que compila el proyecto).
+    buildCommand: npm install --include=dev && npm run build
     startCommand: npm run start:prod
     healthCheckPath: /
     autoDeploy: true
