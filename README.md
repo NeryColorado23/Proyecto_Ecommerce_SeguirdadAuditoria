@@ -88,4 +88,17 @@ El repo incluye `render.yaml` (Blueprint) con la configuración lista: build `np
 
 ### Frontend en Vercel
 
-Pendiente — cuando lleguemos a ese paso, `frontend/src/environments/environment.ts` deberá apuntar `apiUrl` a la URL de Render en vez de `localhost:3300`, y en Supabase (**Authentication → URL Configuration**) habrá que agregar la URL de Vercel a los Redirect URLs permitidos (para que funcionen el reset de contraseña y el login con Google).
+`environment.ts` (el de producción) ya apunta `apiUrl` a `https://ppc-manager-backend.onrender.com`. `environment.development.ts` sigue apuntando a `localhost:3300` para desarrollo local — Angular intercambia uno por otro según la configuración (`fileReplacements` en `angular.json`), así que no hay que tocar nada para seguir trabajando local.
+
+`frontend/vercel.json` ya trae el build command, el output directory (`dist/frontend/browser`) y el rewrite de SPA (para que refrescar en `/dashboard`, `/admin`, etc. no dé 404).
+
+1. En [vercel.com/new](https://vercel.com/new), importa el mismo repo de GitHub.
+2. En **Configure Project**:
+   - **Root Directory**: `frontend` ← igual que con Render, es un monorepo.
+   - **Framework Preset**: Vercel debería detectar "Angular" solo al ver el Root Directory. Si no, selecciónalo a mano.
+   - No hace falta agregar variables de entorno: la URL/llave de Supabase y la URL del backend ya están en `environment.ts` (la anon/publishable key es segura de exponer en el cliente).
+3. **Deploy**. Cuando termine, te da una URL tipo `https://tu-proyecto.vercel.app`.
+4. Con esa URL, actualiza dos cosas:
+   - En **Render** → tu servicio → **Environment** → `FRONTEND_URL` → cámbialo a `https://tu-proyecto.vercel.app,http://localhost:4300` (separado por coma) → guarda (Render redepliega solo).
+   - En **Supabase** → **Authentication → URL Configuration** → agrega `https://tu-proyecto.vercel.app` a los **Redirect URLs** (necesario para que funcionen el reset de contraseña y "Continuar con Google").
+5. Prueba el login completo en la URL de Vercel: registro, login, 2FA, y algún módulo de datos — debería comportarse igual que en local, ahora contra el backend de Render.
