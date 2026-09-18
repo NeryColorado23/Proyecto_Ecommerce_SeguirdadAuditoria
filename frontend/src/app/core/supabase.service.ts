@@ -48,7 +48,13 @@ export class SupabaseService {
   }
 
   enrollMfa() {
-    return this.client.auth.mfa.enroll({ factorType: 'totp' });
+    // Nombre único por intento: si un enroll queda a medias (p. ej. por un
+    // error de red o de configuración), el siguiente intento no choca con
+    // el factor "fantasma" sin verificar que dejó el anterior.
+    return this.client.auth.mfa.enroll({
+      factorType: 'totp',
+      friendlyName: `authenticator-${Date.now()}`,
+    });
   }
 
   challengeMfa(factorId: string) {
