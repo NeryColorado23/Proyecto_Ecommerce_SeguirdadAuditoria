@@ -1,11 +1,12 @@
 import { DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { ProfileService } from '../../core/profile.service';
 import { ImportBatch } from '../../shared/models/import.model';
 import { ImportHistoryComponent } from '../../shared/ui/import-history/import-history.component';
 import { ImportUploaderComponent } from '../../shared/ui/import-uploader/import-uploader.component';
+import { TableSearchComponent } from '../../shared/ui/table-search/table-search.component';
 
 interface SearchTermRow {
   id: string;
@@ -18,7 +19,7 @@ interface SearchTermRow {
 @Component({
   selector: 'app-search-terms',
   standalone: true,
-  imports: [DatePipe, ImportUploaderComponent, ImportHistoryComponent],
+  imports: [DatePipe, ImportUploaderComponent, ImportHistoryComponent, TableSearchComponent],
   templateUrl: './search-terms.component.html',
 })
 export class SearchTermsComponent {
@@ -31,6 +32,36 @@ export class SearchTermsComponent {
   readonly rows = signal<SearchTermRow[]>([]);
   readonly batches = signal<ImportBatch[]>([]);
   readonly loading = signal(true);
+  readonly searchQuery = signal('');
+  readonly minVolume = signal<number | null>(null);
+  readonly maxVolume = signal<number | null>(null);
+
+  readonly filteredRows = computed(() => {
+    const query = this.searchQuery().trim().toLowerCase();
+    const min = this.minVolume();
+    const max = this.maxVolume();
+
+    return this.rows().filter((row) => {
+      const matchesQuery =
+        !query ||
+        row.asin.toLowerCase().includes(query) ||
+        row.search_term.toLowerCase().includes(query);
+
+      const volume = row.search_volume ?? 0;
+      const matchesMin = min === null || volume >= min;
+      const matchesMax = max === null || volume <= max;
+
+      return matchesQuery && matchesMin && matchesMax;
+    });
+  });
+
+  onMinVolumeChange(value: string): void {
+    this.minVolume.set(value ? Number(value) : null);
+  }
+
+  onMaxVolumeChange(value: string): void {
+    this.maxVolume.set(value ? Number(value) : null);
+  }
 
   constructor() {
     this.refresh();

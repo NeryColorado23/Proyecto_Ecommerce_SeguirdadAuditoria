@@ -1,4 +1,5 @@
 import ExcelJS from 'exceljs';
+import { sanitizeText } from './sanitize.util.js';
 
 export interface ColumnSpec {
   header: string;
@@ -32,19 +33,6 @@ export async function buildTemplateWorkbook(
 export interface ParsedRow {
   rowNumber: number;
   values: Record<string, string | number | null>;
-}
-
-// OWASP CSV/Formula Injection: cualquier valor que empiece con estos
-// caracteres es interpretado como fórmula (o invocación DDE) por Excel si el
-// dato se vuelve a exportar/abrir más adelante. Se neutraliza anteponiendo
-// una comilla simple para forzar que se trate como texto literal.
-const DANGEROUS_LEADING_CHARS = new Set(['=', '+', '-', '@', '\t', '\r']);
-
-function sanitizeCellText(value: string): string {
-  if (value.length > 0 && DANGEROUS_LEADING_CHARS.has(value[0])) {
-    return `'${value}`;
-  }
-  return value;
 }
 
 function cellValueToText(raw: unknown): string {
@@ -117,7 +105,7 @@ export async function parseWorkbook(
         value = raw.toISOString().slice(0, 10);
       } else if (raw !== null && raw !== undefined) {
         const text = cellValueToText(raw).trim();
-        value = text.length > 0 ? sanitizeCellText(text) : null;
+        value = text.length > 0 ? sanitizeText(text) : null;
       }
 
       if (value !== null && value !== '') {

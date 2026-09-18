@@ -1,4 +1,6 @@
-import { IsArray, IsOptional, IsString, MaxLength } from 'class-validator';
+import { ArrayMaxSize, IsArray, IsOptional, IsString, IsUrl, MaxLength } from 'class-validator';
+
+const IMAGE_URL_OPTIONS = { protocols: ['http', 'https'], require_protocol: true };
 
 export class UpdateListingDto {
   @IsOptional()
@@ -38,6 +40,7 @@ export class UpdateListingDto {
 
   @IsOptional()
   @IsArray()
-  @IsString({ each: true })
+  @ArrayMaxSize(10)
+  @IsUrl(IMAGE_URL_OPTIONS, { each: true })
   images?: string[];
 }

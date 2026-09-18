@@ -6,20 +6,8 @@ import { environment } from '../../../environments/environment';
 import { ProfileService } from '../../core/profile.service';
 import { SupabaseService } from '../../core/supabase.service';
 import { ImportBatch } from '../../shared/models/import.model';
+import { Listing, isListingIncomplete } from '../../shared/models/listing.model';
 import { ImportHistoryComponent } from '../../shared/ui/import-history/import-history.component';
-
-interface Listing {
-  id: string;
-  asin: string;
-  title: string | null;
-  bullet_1: string | null;
-  bullet_2: string | null;
-  bullet_3: string | null;
-  bullet_4: string | null;
-  bullet_5: string | null;
-  description: string | null;
-  images: string[];
-}
 
 interface SearchTermRow {
   id: string;
@@ -77,7 +65,7 @@ export class DashboardComponent {
 
   readonly listingsCount = computed(() => this.listings().length);
   readonly incompleteListings = computed(() =>
-    this.listings().filter((listing) => this.isIncomplete(listing)),
+    this.listings().filter((listing) => isListingIncomplete(listing)),
   );
 
   readonly searchTermsCount = computed(() => this.searchTerms().length);
@@ -113,17 +101,6 @@ export class DashboardComponent {
 
   constructor() {
     this.refresh();
-  }
-
-  isIncomplete(listing: Listing): boolean {
-    const hasAnyBullet = [
-      listing.bullet_1,
-      listing.bullet_2,
-      listing.bullet_3,
-      listing.bullet_4,
-      listing.bullet_5,
-    ].some(Boolean);
-    return !listing.title || !listing.description || listing.images.length === 0 || !hasAnyBullet;
   }
 
   private refresh(): void {

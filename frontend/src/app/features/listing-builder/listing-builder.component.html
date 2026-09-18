@@ -1,4 +1,4 @@
-<div class="mx-auto max-w-3xl p-6">
+<div class="mx-auto max-w-6xl p-6">
   <h1 class="mb-1 text-2xl font-extrabold text-base-content">Listing Builder</h1>
   <p class="mb-5 text-sm text-base-content/60">
     Crea o edita el contenido de un listing: título, bullets, descripción e imágenes.
@@ -17,6 +17,9 @@
       </select>
     </div>
     <button type="button" class="btn btn-sm btn-outline" (click)="newListing()">+ Nuevo</button>
+    <button type="button" class="btn btn-sm btn-outline lg:hidden" (click)="togglePreview()">
+      {{ showPreview() ? 'Ocultar vista previa' : 'Ver vista previa' }}
+    </button>
     @if (lastUpdated()) {
       <span class="text-xs text-base-content/50">
         Última actualización: {{ lastUpdated() | date: 'short' }}
@@ -31,6 +34,7 @@
     <div class="alert alert-success mb-4 text-sm">{{ successMessage() }}</div>
   }
 
+  <div class="grid gap-6 lg:grid-cols-2">
   <form
     [formGroup]="form"
     (ngSubmit)="save()"
@@ -155,4 +159,12 @@
       {{ saving() ? 'Guardando...' : selectedId() ? 'Guardar cambios' : 'Crear listing' }}
     </button>
   </form>
+
+  <div
+    class="rounded-box border border-base-300 bg-base-100 p-5 lg:block"
+    [class.hidden]="!showPreview()"
+  >
+    <app-listing-preview [listing]="getPreviewListing()" />
+  </div>
+  </div>
 </div>

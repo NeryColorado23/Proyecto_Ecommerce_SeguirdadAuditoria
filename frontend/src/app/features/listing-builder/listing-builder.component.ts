@@ -2,21 +2,10 @@ import { DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { environment } from '../../../environments/environment';
-
-interface Listing {
-  id: string;
-  asin: string;
-  title: string | null;
-  bullet_1: string | null;
-  bullet_2: string | null;
-  bullet_3: string | null;
-  bullet_4: string | null;
-  bullet_5: string | null;
-  description: string | null;
-  images: string[];
-  updated_at: string;
-}
+import { Listing } from '../../shared/models/listing.model';
+import { ListingPreviewComponent } from '../../shared/ui/listing-preview/listing-preview.component';
 
 const TITLE_LIMIT = 200;
 const BULLET_LIMIT = 250;
@@ -25,12 +14,13 @@ const DESCRIPTION_LIMIT = 2000;
 @Component({
   selector: 'app-listing-builder',
   standalone: true,
-  imports: [ReactiveFormsModule, DatePipe],
+  imports: [ReactiveFormsModule, DatePipe, ListingPreviewComponent],
   templateUrl: './listing-builder.component.html',
 })
 export class ListingBuilderComponent implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly fb = inject(FormBuilder);
+  private readonly route = inject(ActivatedRoute);
 
   readonly titleLimit = TITLE_LIMIT;
   readonly bulletLimit = BULLET_LIMIT;
@@ -40,6 +30,7 @@ export class ListingBuilderComponent implements OnInit {
   readonly selectedId = signal<string | null>(null);
   readonly lastUpdated = signal<string | null>(null);
   readonly imageUrls = signal<string[]>(['']);
+  readonly showPreview = signal(false);
 
   readonly saving = signal(false);
   readonly errorMessage = signal<string | null>(null);
@@ -57,7 +48,12 @@ export class ListingBuilderComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.loadListings();
+    const pendingId = this.route.snapshot.queryParamMap.get('id');
+    this.loadListings(() => {
+      if (pendingId) {
+        this.selectListing(pendingId);
+      }
+    });
   }
 
   onSelectChange(event: Event): void {
@@ -125,6 +121,29 @@ export class ListingBuilderComponent implements OnInit {
     this.imageUrls.update((urls) => urls.map((u, i) => (i === index ? value : u)));
   }
 
+  togglePreview(): void {
+    this.showPreview.update((value) => !value);
+  }
+
+  getPreviewListing(): Listing {
+    const raw = this.form.getRawValue();
+    return {
+      id: this.selectedId() ?? 'preview',
+      asin: raw.asin || 'SIN-ASIN',
+      title: raw.title || null,
+      bullet_1: raw.bullet_1 || null,
+      bullet_2: raw.bullet_2 || null,
+      bullet_3: raw.bullet_3 || null,
+      bullet_4: raw.bullet_4 || null,
+      bullet_5: raw.bullet_5 || null,
+      description: raw.description || null,
+      images: this.imageUrls()
+        .map((url) => url.trim())
+        .filter(Boolean),
+      updated_at: this.lastUpdated() ?? new Date().toISOString(),
+    };
+  }
+
   save(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -172,9 +191,10 @@ export class ListingBuilderComponent implements OnInit {
     }
   }
 
-  private loadListings(): void {
-    this.http
-      .get<Listing[]>(`${environment.apiUrl}/listings`)
-      .subscribe((data) => this.listings.set(data));
+  private loadListings(onLoaded?: () => void): void {
+    this.http.get<Listing[]>(`${environment.apiUrl}/listings`).subscribe((data) => {
+      this.listings.set(data);
+      onLoaded?.();
+    });
   }
 }

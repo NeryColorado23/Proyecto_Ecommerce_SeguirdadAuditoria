@@ -21,6 +21,7 @@ import { Roles } from '../auth/roles.decorator.js';
 import { RolesGuard } from '../auth/roles.guard.js';
 import { SupabaseAuthGuard } from '../auth/supabase-auth.guard.js';
 import { ColumnSpec, buildTemplateWorkbook, parseWorkbook } from '../common/excel.util.js';
+import { sanitizeText } from '../common/sanitize.util.js';
 import { ImportBatchesService, RowError } from '../imports/import-batches.service.js';
 import { SupabaseService } from '../supabase/supabase.service.js';
 import { CreateListingDto } from './dto/create-listing.dto.js';
@@ -97,7 +98,7 @@ export class ListingsController {
   ) {
     const { data, error } = await this.supabase.client
       .from('listings')
-      .insert({ ...dto, images: dto.images ?? [] })
+      .insert({ ...this.sanitizeListingText(dto), images: dto.images ?? [] })
       .select('*')
       .single();
 
@@ -124,7 +125,7 @@ export class ListingsController {
   ) {
     const { data, error } = await this.supabase.client
       .from('listings')
-      .update(dto)
+      .update(this.sanitizeListingText(dto))
       .eq('id', id)
       .select('*')
       .maybeSingle();
@@ -218,5 +219,30 @@ export class ListingsController {
       errorCount: errors.length,
       errors,
     };
+  }
+
+  // Mismo anti-inyección de fórmulas que aplica la carga por Excel (ver
+  // common/sanitize.util.ts), pero para el texto escrito a mano en el
+  // Listing Builder: ambos caminos terminan en la misma tabla.
+  private sanitizeListingText<T extends Partial<CreateListingDto>>(dto: T): T {
+    const sanitized = { ...dto };
+    const textFields = [
+      'title',
+      'bullet_1',
+      'bullet_2',
+      'bullet_3',
+      'bullet_4',
+      'bullet_5',
+      'description',
+    ] as const;
+
+    for (const field of textFields) {
+      const value = sanitized[field];
+      if (typeof value === 'string') {
+        sanitized[field] = sanitizeText(value) as T[typeof field];
+      }
+    }
+
+    return sanitized;
   }
 }
