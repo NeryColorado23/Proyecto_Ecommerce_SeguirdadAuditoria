@@ -1,14 +1,15 @@
 # Amazon PPC Manager
 
 Monorepo con frontend (Angular), backend (NestJS) y Supabase como base de datos/auth.
-Módulos: Login (+ 2FA), Dashboard, PPC, Search Terms, Listings, Administración (roles + auditoría).
-Pendientes: Keywords, Listing Builder.
+Módulos: Login (+ 2FA), Dashboard, PPC, Search Terms, Listings, Listing Builder, Keywords,
+Administración (roles + auditoría).
 
 ## Estructura
 
 - `frontend/` — Angular 22 (standalone components + signals) + Tailwind CSS + DaisyUI, cliente Supabase directo para auth/MFA.
 - `backend/` — NestJS 12, expone API propia para los módulos de datos (PPC/Search Terms/Listings/Admin/Audit), protegida con guard de Supabase.
-- `supabase/` — esquema SQL a correr en el SQL Editor del dashboard (`schema.sql` → roles, `modules.sql` → datos de PPC/Search Terms/Listings, `audit.sql` → bitácora de auditoría). Correr en ese orden.
+- `supabase/` — esquema SQL a correr en el SQL Editor del dashboard: `schema.sql` (roles) → `modules.sql` (PPC/Search Terms/Listings) → `audit.sql` (bitácora) → `mfa-recovery.sql` (códigos de recuperación) → `keywords.sql` (Keywords). Correr en ese orden.
+- `render.yaml` — Blueprint de despliegue del backend en Render (ver sección "Despliegue" al final).
 
 ## 1. Crear el proyecto de Supabase
 
@@ -65,3 +66,24 @@ Por defecto corre en el puerto definido en `PORT` (`.env.example` trae `3300` pa
 - **Cabeceras de seguridad HTTP**: `helmet` en el backend (X-Content-Type-Options, X-Frame-Options, etc.).
 - **Anti-inyección de fórmulas en Excel/CSV**: cualquier valor cargado que empiece con `=`, `+`, `-`, `@`, tab o CR se neutraliza (se antepone `'`) antes de guardarse, para prevenir CSV/Formula Injection si esos datos se vuelven a exportar y abrir en Excel.
 - **Cadena de suministro**: `npm run security:audit` (falla si hay vulnerabilidades altas/críticas) y `npm run sbom` (genera `sbom.json` en formato CycloneDX) en `frontend/` y `backend/`. Automatizado en cada push/PR vía `.github/workflows/security.yml`.
+
+## Despliegue
+
+### Backend en Render
+
+El repo incluye `render.yaml` (Blueprint) con la configuración lista: build `npm install && npm run build`, arranque `npm run start:prod`, health check en `/`, y detección correcta de la IP real del cliente detrás del proxy de Render (`trust proxy`) — sin esto, la bitácora de auditoría y el rate limiting verían a todos los usuarios como una sola IP.
+
+1. Sube el repo a GitHub (o el remoto que estés usando).
+2. En [Render Dashboard](https://dashboard.render.com) → **New → Blueprint**, apunta al repo. Render detecta `render.yaml` automáticamente.
+3. Cuando te pida las variables de entorno marcadas `sync: false`, completa:
+   - `SUPABASE_URL` — el mismo que ya usas.
+   - `SUPABASE_SERVICE_ROLE_KEY` — la service role key (o `sb_secret_...`). **Nunca la pongas en el repo.**
+   - `FRONTEND_URL` — por ahora puedes poner `http://localhost:4300`; cuando el frontend esté en Vercel, agrega esa URL también, separadas por coma: `https://tu-app.vercel.app,http://localhost:4300`.
+4. Deploy. Una vez arriba, prueba `https://tu-servicio.onrender.com/` — debería responder `Hello World!`.
+5. Plan free de Render: el servicio "duerme" tras ~15 min sin tráfico y el primer request después tarda unos segundos en despertar. Normal, no es un error.
+
+**No se pierde nada de seguridad al desplegar**: RLS y las políticas viven en Supabase (no dependen de dónde corra el backend), MFA/roles/auditoría/rate-limiting/validación son lógica de la app que viaja con el código, y las claves siguen fuera del repo vía variables de entorno de Render.
+
+### Frontend en Vercel
+
+Pendiente — cuando lleguemos a ese paso, `frontend/src/environments/environment.ts` deberá apuntar `apiUrl` a la URL de Render en vez de `localhost:3300`, y en Supabase (**Authentication → URL Configuration**) habrá que agregar la URL de Vercel a los Redirect URLs permitidos (para que funcionen el reset de contraseña y el login con Google).

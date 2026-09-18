@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: ppc-manager-backend
+    runtime: node
+    rootDir: backend
+    plan: free
+    region: oregon
+    buildCommand: npm install && npm run build
+    startCommand: npm run start:prod
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Pega aquí el Project URL de Supabase (Settings -> API).
+      - key: SUPABASE_URL
+        sync: false
+      # Pega aquí la service_role key (o sb_secret_...). NUNCA la pongas
+      # en este archivo ni la subas al repo: se completa solo en el
+      # dashboard de Render.
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      # URL(s) del frontend permitidas por CORS. Acepta varias separadas
+      # por coma, por ejemplo:
+      # https://tu-app.vercel.app,http://localhost:4300
+      - key: FRONTEND_URL
+        sync: false
