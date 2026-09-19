@@ -12,136 +12,170 @@
       Cargando...
     </div>
   } @else {
-    <div class="stats stats-vertical w-full border border-base-300 bg-base-100 shadow-sm sm:stats-horizontal">
-      <div class="stat">
-        <div class="stat-title">Listings</div>
-        <div class="stat-value text-primary">{{ listingsCount() }}</div>
-        <div class="stat-desc">{{ incompleteListings().length }} incompletos</div>
-      </div>
-      <div class="stat">
-        <div class="stat-title">Search Terms</div>
-        <div class="stat-value text-primary">{{ searchTermsCount() }}</div>
-        <div class="stat-desc">Volumen total: {{ totalSearchVolume() | number }}</div>
-      </div>
-      <div class="stat">
-        <div class="stat-title">Inversión PPC</div>
-        <div class="stat-value">{{ ppcTotals().spend | currency }}</div>
-        <div class="stat-desc">ACOS {{ ppcAcos() }}</div>
-      </div>
-      <div class="stat">
-        <div class="stat-title">Ventas PPC</div>
-        <div class="stat-value">{{ ppcTotals().sales | currency }}</div>
-        <div class="stat-desc">{{ ppcTotals().orders }} pedidos</div>
-      </div>
-      <div class="stat">
-        <div class="stat-title">Keywords</div>
-        <div class="stat-value text-primary">{{ keywordsCount() }}</div>
-        <div class="stat-desc">{{ keywordsNotIndexed().length }} sin indexar</div>
-      </div>
-    </div>
-
-    <div class="mt-6 grid gap-6 lg:grid-cols-2">
-      <div class="rounded-box border border-base-300 bg-base-100 p-4">
-        <div class="mb-3 flex items-center justify-between">
-          <h2 class="font-bold text-base-content">Top search terms por volumen</h2>
-          <a routerLink="/search-terms" class="link text-xs">Ver todos →</a>
-        </div>
-        @if (topSearchTerms().length === 0) {
-          <p class="text-sm text-base-content/60">Sin datos todavía.</p>
-        } @else {
-          <table class="table table-sm">
-            <thead>
-              <tr>
-                <th>ASIN</th>
-                <th>Término</th>
-                <th>Volumen</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (term of topSearchTerms(); track term.id) {
-                <tr>
-                  <td class="font-mono text-xs">{{ term.asin }}</td>
-                  <td>{{ term.search_term }}</td>
-                  <td>{{ term.search_volume ?? '—' }}</td>
-                </tr>
-              }
-            </tbody>
-          </table>
+    @if (
+      permissions.canView('listings') ||
+      permissions.canView('search_terms') ||
+      permissions.canView('ppc') ||
+      permissions.canView('keywords')
+    ) {
+      <div class="stats stats-vertical w-full border border-base-300 bg-base-100 shadow-sm sm:stats-horizontal">
+        @if (permissions.canView('listings')) {
+          <div class="stat">
+            <div class="stat-title">Listings</div>
+            <div class="stat-value text-primary">{{ listingsCount() }}</div>
+            <div class="stat-desc">{{ incompleteListings().length }} incompletos</div>
+          </div>
+        }
+        @if (permissions.canView('search_terms')) {
+          <div class="stat">
+            <div class="stat-title">Search Terms</div>
+            <div class="stat-value text-primary">{{ searchTermsCount() }}</div>
+            <div class="stat-desc">Volumen total: {{ totalSearchVolume() | number }}</div>
+          </div>
+        }
+        @if (permissions.canView('ppc')) {
+          <div class="stat">
+            <div class="stat-title">Inversión PPC</div>
+            <div class="stat-value">{{ ppcTotals().spend | currency }}</div>
+            <div class="stat-desc">ACOS {{ ppcAcos() }}</div>
+          </div>
+          <div class="stat">
+            <div class="stat-title">Ventas PPC</div>
+            <div class="stat-value">{{ ppcTotals().sales | currency }}</div>
+            <div class="stat-desc">{{ ppcTotals().orders }} pedidos</div>
+          </div>
+        }
+        @if (permissions.canView('keywords')) {
+          <div class="stat">
+            <div class="stat-title">Keywords</div>
+            <div class="stat-value text-primary">{{ keywordsCount() }}</div>
+            <div class="stat-desc">{{ keywordsNotIndexed().length }} sin indexar</div>
+          </div>
         }
       </div>
+    } @else {
+      <p class="text-sm text-base-content/60">
+        Todavía no tienes acceso a ningún módulo. Pídele a un administrador que te asigne
+        permisos.
+      </p>
+    }
 
-      <div class="rounded-box border border-base-300 bg-base-100 p-4">
-        <div class="mb-3 flex items-center justify-between">
-          <h2 class="font-bold text-base-content">Mayor inversión PPC</h2>
-          <a routerLink="/ppc" class="link text-xs">Ver todo →</a>
-        </div>
-        @if (topPpcBySpend().length === 0) {
-          <p class="text-sm text-base-content/60">Sin datos todavía.</p>
-        } @else {
-          <table class="table table-sm">
-            <thead>
-              <tr>
-                <th>Campaña</th>
-                <th>Targeting</th>
-                <th>Inversión</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (report of topPpcBySpend(); track report.id) {
-                <tr>
-                  <td class="max-w-32 truncate">{{ report.campaign_name }}</td>
-                  <td class="max-w-32 truncate">{{ report.targeting }}</td>
-                  <td>{{ report.spend | currency }}</td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        }
-      </div>
-    </div>
-
-    <div class="mt-6 grid gap-6 lg:grid-cols-2">
-      <div class="rounded-box border border-base-300 bg-base-100 p-4">
-        <div class="mb-3 flex items-center justify-between">
-          <h2 class="font-bold text-base-content">Listings sin completar</h2>
-          <a routerLink="/listings" class="link text-xs">Ver todos →</a>
-        </div>
-        @if (incompleteListings().length === 0) {
-          <p class="text-sm text-base-content/60">Todos los listings cargados están completos.</p>
-        } @else {
-          <ul class="flex flex-col gap-1 text-sm">
-            @for (listing of incompleteListings().slice(0, 5); track listing.id) {
-              <li class="flex items-center justify-between border-b border-base-200 py-1 last:border-0">
-                <span class="font-mono text-xs">{{ listing.asin }}</span>
-                <span class="max-w-64 truncate text-base-content/70">{{ listing.title || 'Sin título' }}</span>
-              </li>
+    @if (permissions.canView('search_terms') || permissions.canView('ppc')) {
+      <div class="mt-6 grid gap-6 lg:grid-cols-2">
+        @if (permissions.canView('search_terms')) {
+          <div class="rounded-box border border-base-300 bg-base-100 p-4">
+            <div class="mb-3 flex items-center justify-between">
+              <h2 class="font-bold text-base-content">Top search terms por volumen</h2>
+              <a routerLink="/search-terms" class="link text-xs">Ver todos →</a>
+            </div>
+            @if (topSearchTerms().length === 0) {
+              <p class="text-sm text-base-content/60">Sin datos todavía.</p>
+            } @else {
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th>ASIN</th>
+                    <th>Término</th>
+                    <th>Volumen</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (term of topSearchTerms(); track term.id) {
+                    <tr>
+                      <td class="font-mono text-xs">{{ term.asin }}</td>
+                      <td>{{ term.search_term }}</td>
+                      <td>{{ term.search_volume ?? '—' }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
             }
-          </ul>
+          </div>
         }
-      </div>
 
-      <div class="rounded-box border border-base-300 bg-base-100 p-4">
-        <div class="mb-3 flex items-center justify-between">
-          <h2 class="font-bold text-base-content">Keywords sin indexar</h2>
-          <a routerLink="/keywords" class="link text-xs">Ver todos →</a>
-        </div>
-        @if (keywordsNotIndexed().length === 0) {
-          <p class="text-sm text-base-content/60">Todos los keywords cargados están indexados.</p>
-        } @else {
-          <ul class="flex flex-col gap-1 text-sm">
-            @for (kw of keywordsNotIndexed().slice(0, 5); track kw.id) {
-              <li class="flex items-center justify-between border-b border-base-200 py-1 last:border-0">
-                <span class="font-mono text-xs">{{ kw.asin }}</span>
-                <span class="max-w-64 truncate text-base-content/70">{{ kw.keyword }}</span>
-              </li>
+        @if (permissions.canView('ppc')) {
+          <div class="rounded-box border border-base-300 bg-base-100 p-4">
+            <div class="mb-3 flex items-center justify-between">
+              <h2 class="font-bold text-base-content">Mayor inversión PPC</h2>
+              <a routerLink="/ppc" class="link text-xs">Ver todo →</a>
+            </div>
+            @if (topPpcBySpend().length === 0) {
+              <p class="text-sm text-base-content/60">Sin datos todavía.</p>
+            } @else {
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th>Campaña</th>
+                    <th>Targeting</th>
+                    <th>Inversión</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (report of topPpcBySpend(); track report.id) {
+                    <tr>
+                      <td class="max-w-32 truncate">{{ report.campaign_name }}</td>
+                      <td class="max-w-32 truncate">{{ report.targeting }}</td>
+                      <td>{{ report.spend | currency }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
             }
-          </ul>
+          </div>
         }
       </div>
-    </div>
+    }
 
-    <div class="mt-6">
-      <app-import-history [batches]="recentImports()" [showModule]="true" title="Actividad reciente de cargas" />
-    </div>
+    @if (permissions.canView('listings') || permissions.canView('keywords')) {
+      <div class="mt-6 grid gap-6 lg:grid-cols-2">
+        @if (permissions.canView('listings')) {
+          <div class="rounded-box border border-base-300 bg-base-100 p-4">
+            <div class="mb-3 flex items-center justify-between">
+              <h2 class="font-bold text-base-content">Listings sin completar</h2>
+              <a routerLink="/listings" class="link text-xs">Ver todos →</a>
+            </div>
+            @if (incompleteListings().length === 0) {
+              <p class="text-sm text-base-content/60">Todos los listings cargados están completos.</p>
+            } @else {
+              <ul class="flex flex-col gap-1 text-sm">
+                @for (listing of incompleteListings().slice(0, 5); track listing.id) {
+                  <li class="flex items-center justify-between border-b border-base-200 py-1 last:border-0">
+                    <span class="font-mono text-xs">{{ listing.asin }}</span>
+                    <span class="max-w-64 truncate text-base-content/70">{{ listing.title || 'Sin título' }}</span>
+                  </li>
+                }
+              </ul>
+            }
+          </div>
+        }
+
+        @if (permissions.canView('keywords')) {
+          <div class="rounded-box border border-base-300 bg-base-100 p-4">
+            <div class="mb-3 flex items-center justify-between">
+              <h2 class="font-bold text-base-content">Keywords sin indexar</h2>
+              <a routerLink="/keywords" class="link text-xs">Ver todos →</a>
+            </div>
+            @if (keywordsNotIndexed().length === 0) {
+              <p class="text-sm text-base-content/60">Todos los keywords cargados están indexados.</p>
+            } @else {
+              <ul class="flex flex-col gap-1 text-sm">
+                @for (kw of keywordsNotIndexed().slice(0, 5); track kw.id) {
+                  <li class="flex items-center justify-between border-b border-base-200 py-1 last:border-0">
+                    <span class="font-mono text-xs">{{ kw.asin }}</span>
+                    <span class="max-w-64 truncate text-base-content/70">{{ kw.keyword }}</span>
+                  </li>
+                }
+              </ul>
+            }
+          </div>
+        }
+      </div>
+    }
+
+    @if (recentImports().length > 0) {
+      <div class="mt-6">
+        <app-import-history [batches]="recentImports()" [showModule]="true" title="Actividad reciente de cargas" />
+      </div>
+    }
   }
 </div>

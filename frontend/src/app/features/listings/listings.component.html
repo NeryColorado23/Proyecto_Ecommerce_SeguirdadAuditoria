@@ -4,7 +4,7 @@
   <app-import-uploader
     [importUrl]="importUrl"
     [templateUrl]="templateUrl"
-    [canImport]="profile.isAdmin()"
+    [canImport]="permissions.canEdit('listings')"
     (imported)="onImported()"
   />
 
@@ -33,7 +33,9 @@
             <option value="incomplete">Incompletos</option>
           </select>
         </div>
-        <a routerLink="/listing-builder" class="btn btn-sm btn-primary">+ Nuevo listing</a>
+        @if (permissions.canEdit('listings')) {
+          <a routerLink="/listing-builder" class="btn btn-sm btn-primary">+ Nuevo listing</a>
+        }
       </div>
 
       @if (filteredListings().length === 0) {
@@ -79,13 +81,15 @@
                     >
                       Vista previa
                     </button>
-                    <a
-                      [routerLink]="['/listing-builder']"
-                      [queryParams]="{ id: listing.id }"
-                      class="btn btn-xs btn-ghost"
-                    >
-                      Editar
-                    </a>
+                    @if (permissions.canEdit('listings')) {
+                      <a
+                        [routerLink]="['/listing-builder']"
+                        [queryParams]="{ id: listing.id }"
+                        class="btn btn-xs btn-ghost"
+                      >
+                        Editar
+                      </a>
+                    }
                   </td>
                 </tr>
               }

@@ -12,7 +12,8 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { Request } from 'express';
 import { AuditLogService } from '../audit/audit-log.service.js';
 import type { AuthenticatedUser } from '../auth/current-user.js';
-import { Roles } from '../auth/roles.decorator.js';
+import { ModuleAccessGuard } from '../auth/module-access.guard.js';
+import { RequireModule } from '../auth/module-access.decorator.js';
 import { RolesGuard } from '../auth/roles.guard.js';
 import { SupabaseAuthGuard } from '../auth/supabase-auth.guard.js';
 import { ColumnSpec, buildTemplateWorkbook, parseWorkbook } from '../common/excel.util.js';
@@ -32,7 +33,7 @@ const COLUMNS: ColumnSpec[] = [
   { header: 'Pedidos', key: 'orders', width: 10, example: 5 },
 ];
 
-@UseGuards(SupabaseAuthGuard, RolesGuard)
+@UseGuards(SupabaseAuthGuard, RolesGuard, ModuleAccessGuard)
 @Controller('ppc')
 export class PpcController {
   constructor(
@@ -40,6 +41,7 @@ export class PpcController {
     private readonly importBatches: ImportBatchesService,
   ) {}
 
+  @RequireModule('ppc')
   @Get()
   async list() {
     const { data, error } = await this.supabase.client
@@ -54,18 +56,20 @@ export class PpcController {
     return data;
   }
 
+  @RequireModule('ppc', 'editor')
   @Get('template')
   async downloadTemplate(): Promise<{ fileName: string; base64: string }> {
     const buffer = await buildTemplateWorkbook('PPC', COLUMNS);
     return { fileName: 'plantilla-ppc.xlsx', base64: buffer.toString('base64') };
   }
 
+  @RequireModule('ppc')
   @Get('imports')
   listImports() {
     return this.importBatches.listForModule('ppc');
   }
 
-  @Roles('admin')
+  @RequireModule('ppc', 'editor')
   @Post('import')
   @UseInterceptors(FileInterceptor('file'))
   async import(

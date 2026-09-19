@@ -17,7 +17,8 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { Request } from 'express';
 import { AuditLogService } from '../audit/audit-log.service.js';
 import type { AuthenticatedUser } from '../auth/current-user.js';
-import { Roles } from '../auth/roles.decorator.js';
+import { ModuleAccessGuard } from '../auth/module-access.guard.js';
+import { RequireModule } from '../auth/module-access.decorator.js';
 import { RolesGuard } from '../auth/roles.guard.js';
 import { SupabaseAuthGuard } from '../auth/supabase-auth.guard.js';
 import { ColumnSpec, buildTemplateWorkbook, parseWorkbook } from '../common/excel.util.js';
@@ -39,7 +40,7 @@ const COLUMNS: ColumnSpec[] = [
   { header: 'Imágenes (URLs separadas por coma)', key: 'images', width: 50 },
 ];
 
-@UseGuards(SupabaseAuthGuard, RolesGuard)
+@UseGuards(SupabaseAuthGuard, RolesGuard, ModuleAccessGuard)
 @Controller('listings')
 export class ListingsController {
   constructor(
@@ -48,6 +49,7 @@ export class ListingsController {
     private readonly auditLog: AuditLogService,
   ) {}
 
+  @RequireModule('listings')
   @Get()
   async list() {
     const { data, error } = await this.supabase.client
@@ -62,17 +64,20 @@ export class ListingsController {
     return data;
   }
 
+  @RequireModule('listings', 'editor')
   @Get('template')
   async downloadTemplate(): Promise<{ fileName: string; base64: string }> {
     const buffer = await buildTemplateWorkbook('Listings', COLUMNS);
     return { fileName: 'plantilla-listings.xlsx', base64: buffer.toString('base64') };
   }
 
+  @RequireModule('listings')
   @Get('imports')
   listImports() {
     return this.importBatches.listForModule('listings');
   }
 
+  @RequireModule('listings')
   @Get(':id')
   async getOne(@Param('id', new ParseUUIDPipe()) id: string) {
     const { data, error } = await this.supabase.client
@@ -91,6 +96,7 @@ export class ListingsController {
     return data;
   }
 
+  @RequireModule('listings', 'editor')
   @Post()
   async create(
     @Body() dto: CreateListingDto,
@@ -117,6 +123,7 @@ export class ListingsController {
     return data;
   }
 
+  @RequireModule('listings', 'editor')
   @Patch(':id')
   async update(
     @Param('id', new ParseUUIDPipe()) id: string,
@@ -148,7 +155,7 @@ export class ListingsController {
     return data;
   }
 
-  @Roles('admin')
+  @RequireModule('listings', 'editor')
   @Post('import')
   @UseInterceptors(FileInterceptor('file'))
   async import(

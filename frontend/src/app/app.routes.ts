@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { authGuard, guestGuard } from './core/auth.guard';
 import { adminGuard } from './core/admin.guard';
 import { mfaEnforcementGuard, mfaVerifyGuard } from './core/mfa.guard';
+import { moduleAccessGuard } from './core/module-access.guard';
 
 export const routes: Routes = [
   {
@@ -57,12 +58,12 @@ export const routes: Routes = [
       },
       {
         path: 'ppc',
-        canActivate: [mfaEnforcementGuard],
+        canActivate: [mfaEnforcementGuard, moduleAccessGuard('ppc', 'viewer')],
         loadComponent: () => import('./features/ppc/ppc.component').then((m) => m.PpcComponent),
       },
       {
         path: 'search-terms',
-        canActivate: [mfaEnforcementGuard],
+        canActivate: [mfaEnforcementGuard, moduleAccessGuard('search_terms', 'viewer')],
         loadComponent: () =>
           import('./features/search-terms/search-terms.component').then(
             (m) => m.SearchTermsComponent,
@@ -70,19 +71,19 @@ export const routes: Routes = [
       },
       {
         path: 'listings',
-        canActivate: [mfaEnforcementGuard],
+        canActivate: [mfaEnforcementGuard, moduleAccessGuard('listings', 'viewer')],
         loadComponent: () =>
           import('./features/listings/listings.component').then((m) => m.ListingsComponent),
       },
       {
         path: 'keywords',
-        canActivate: [mfaEnforcementGuard],
+        canActivate: [mfaEnforcementGuard, moduleAccessGuard('keywords', 'viewer')],
         loadComponent: () =>
           import('./features/keywords/keywords.component').then((m) => m.KeywordsComponent),
       },
       {
         path: 'listing-builder',
-        canActivate: [mfaEnforcementGuard],
+        canActivate: [mfaEnforcementGuard, moduleAccessGuard('listings', 'editor')],
         loadComponent: () =>
           import('./features/listing-builder/listing-builder.component').then(
             (m) => m.ListingBuilderComponent,

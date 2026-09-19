@@ -13,12 +13,14 @@ import { PpcModule } from './ppc/ppc.module.js';
 import { AuditModule } from './audit/audit.module.js';
 import { MfaModule } from './mfa/mfa.module.js';
 import { KeywordsModule } from './keywords/keywords.module.js';
+import { PermissionsModule } from './permissions/permissions.module.js';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
     SupabaseModule,
+    PermissionsModule,
     AuditModule,
     AuthModule,
     AdminModule,

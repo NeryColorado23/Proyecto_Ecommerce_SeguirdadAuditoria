@@ -2,7 +2,7 @@ import { DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { environment } from '../../../environments/environment';
-import { ProfileService } from '../../core/profile.service';
+import { PermissionsService } from '../../core/permissions.service';
 import { ImportBatch } from '../../shared/models/import.model';
 import { ImportHistoryComponent } from '../../shared/ui/import-history/import-history.component';
 import { ImportUploaderComponent } from '../../shared/ui/import-uploader/import-uploader.component';
@@ -26,7 +26,7 @@ interface KeywordRow {
 })
 export class KeywordsComponent {
   private readonly http = inject(HttpClient);
-  protected readonly profile = inject(ProfileService);
+  protected readonly permissions = inject(PermissionsService);
 
   readonly importUrl = `${environment.apiUrl}/keywords/import`;
   readonly templateUrl = `${environment.apiUrl}/keywords/template`;

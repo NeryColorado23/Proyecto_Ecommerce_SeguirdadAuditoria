@@ -1,8 +1,9 @@
 import { CurrencyPipe, DecimalPipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { environment } from '../../../environments/environment';
+import { AppModuleName, PermissionsService } from '../../core/permissions.service';
 import { ProfileService } from '../../core/profile.service';
 import { SupabaseService } from '../../core/supabase.service';
 import { ImportBatch } from '../../shared/models/import.model';
@@ -36,7 +37,7 @@ interface PpcReport {
   orders: number;
 }
 
-const IMPORT_SOURCES: { module: string; label: string; endpoint: string }[] = [
+const IMPORT_SOURCES: { module: AppModuleName; label: string; endpoint: string }[] = [
   { module: 'listings', label: 'Listings', endpoint: 'listings/imports' },
   { module: 'search_terms', label: 'Search Terms', endpoint: 'search-terms/imports' },
   { module: 'ppc', label: 'PPC', endpoint: 'ppc/imports' },
@@ -54,6 +55,7 @@ export class DashboardComponent {
   private readonly http = inject(HttpClient);
   protected readonly supabase = inject(SupabaseService);
   protected readonly profile = inject(ProfileService);
+  protected readonly permissions = inject(PermissionsService);
 
   readonly loading = signal(true);
 
@@ -100,33 +102,66 @@ export class DashboardComponent {
   readonly keywordsNotIndexed = computed(() => this.keywords().filter((k) => !k.indexed));
 
   constructor() {
-    this.refresh();
+    // permissions.ready() y profile.profile() vienen de dos efectos async
+    // independientes disparados por el mismo login: hay que esperar a que
+    // ambos se resuelvan antes de decidir qué módulos puede ver este
+    // usuario, si no un 403 por permiso aún no cargado deja el dashboard
+    // pegado en "Cargando...".
+    effect(() => {
+      if (!this.permissions.ready()) {
+        return;
+      }
+      this.refresh();
+    });
   }
 
   private refresh(): void {
     this.loading.set(true);
 
-    this.http.get<Listing[]>(`${environment.apiUrl}/listings`).subscribe((data) => {
-      this.listings.set(data);
+    if (this.permissions.canView('listings')) {
+      this.http.get<Listing[]>(`${environment.apiUrl}/listings`).subscribe({
+        next: (data) => {
+          this.listings.set(data);
+          this.loading.set(false);
+        },
+        error: () => this.loading.set(false),
+      });
+    } else {
       this.loading.set(false);
-    });
-    this.http
-      .get<SearchTermRow[]>(`${environment.apiUrl}/search-terms`)
-      .subscribe((data) => this.searchTerms.set(data));
-    this.http
-      .get<PpcReport[]>(`${environment.apiUrl}/ppc`)
-      .subscribe((data) => this.ppcReports.set(data));
-    this.http
-      .get<KeywordRow[]>(`${environment.apiUrl}/keywords`)
-      .subscribe((data) => this.keywords.set(data));
+    }
+
+    if (this.permissions.canView('search_terms')) {
+      this.http.get<SearchTermRow[]>(`${environment.apiUrl}/search-terms`).subscribe({
+        next: (data) => this.searchTerms.set(data),
+        error: () => {},
+      });
+    }
+    if (this.permissions.canView('ppc')) {
+      this.http.get<PpcReport[]>(`${environment.apiUrl}/ppc`).subscribe({
+        next: (data) => this.ppcReports.set(data),
+        error: () => {},
+      });
+    }
+    if (this.permissions.canView('keywords')) {
+      this.http.get<KeywordRow[]>(`${environment.apiUrl}/keywords`).subscribe({
+        next: (data) => this.keywords.set(data),
+        error: () => {},
+      });
+    }
 
     for (const source of IMPORT_SOURCES) {
-      this.http.get<ImportBatch[]>(`${environment.apiUrl}/${source.endpoint}`).subscribe((data) => {
-        const labeled = data.map((batch) => ({ ...batch, moduleLabel: source.label }));
-        const merged = [...this.recentImports(), ...labeled]
-          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-          .slice(0, 6);
-        this.recentImports.set(merged);
+      if (!this.permissions.canView(source.module)) {
+        continue;
+      }
+      this.http.get<ImportBatch[]>(`${environment.apiUrl}/${source.endpoint}`).subscribe({
+        next: (data) => {
+          const labeled = data.map((batch) => ({ ...batch, moduleLabel: source.label }));
+          const merged = [...this.recentImports(), ...labeled]
+            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+            .slice(0, 6);
+          this.recentImports.set(merged);
+        },
+        error: () => {},
       });
     }
   }

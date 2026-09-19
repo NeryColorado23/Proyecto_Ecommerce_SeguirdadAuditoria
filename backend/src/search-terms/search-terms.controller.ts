@@ -12,7 +12,8 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { Request } from 'express';
 import { AuditLogService } from '../audit/audit-log.service.js';
 import type { AuthenticatedUser } from '../auth/current-user.js';
-import { Roles } from '../auth/roles.decorator.js';
+import { ModuleAccessGuard } from '../auth/module-access.guard.js';
+import { RequireModule } from '../auth/module-access.decorator.js';
 import { RolesGuard } from '../auth/roles.guard.js';
 import { SupabaseAuthGuard } from '../auth/supabase-auth.guard.js';
 import { ColumnSpec, buildTemplateWorkbook, parseWorkbook } from '../common/excel.util.js';
@@ -25,7 +26,7 @@ const COLUMNS: ColumnSpec[] = [
   { header: 'Volumen de búsqueda', key: 'search_volume', width: 20, example: 1000 },
 ];
 
-@UseGuards(SupabaseAuthGuard, RolesGuard)
+@UseGuards(SupabaseAuthGuard, RolesGuard, ModuleAccessGuard)
 @Controller('search-terms')
 export class SearchTermsController {
   constructor(
@@ -33,6 +34,7 @@ export class SearchTermsController {
     private readonly importBatches: ImportBatchesService,
   ) {}
 
+  @RequireModule('search_terms')
   @Get()
   async list() {
     const { data, error } = await this.supabase.client
@@ -47,18 +49,20 @@ export class SearchTermsController {
     return data;
   }
 
+  @RequireModule('search_terms', 'editor')
   @Get('template')
   async downloadTemplate(): Promise<{ fileName: string; base64: string }> {
     const buffer = await buildTemplateWorkbook('Search Terms', COLUMNS);
     return { fileName: 'plantilla-search-terms.xlsx', base64: buffer.toString('base64') };
   }
 
+  @RequireModule('search_terms')
   @Get('imports')
   listImports() {
     return this.importBatches.listForModule('search_terms');
   }
 
-  @Roles('admin')
+  @RequireModule('search_terms', 'editor')
   @Post('import')
   @UseInterceptors(FileInterceptor('file'))
   async import(

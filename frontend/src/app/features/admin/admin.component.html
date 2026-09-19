@@ -11,12 +11,20 @@
       Cargando...
     </div>
   } @else {
-    <div class="mt-6 overflow-visible rounded-box border border-base-300 bg-base-100">
+    <p class="mb-3 mt-6 text-xs text-base-content/60">
+      Un usuario nuevo entra sin acceso a ningún módulo. Asígnale "Vista" (solo lectura) o
+      "Editor" (control total, incluida la carga masiva de Excel) para cada uno. Los
+      administradores siempre tienen acceso completo y no usan esta matriz.
+    </p>
+    <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
       <table class="table">
         <thead>
           <tr>
             <th>Email</th>
             <th>Rol</th>
+            @for (moduleName of modules; track moduleName) {
+              <th>{{ moduleLabel(moduleName) }}</th>
+            }
           </tr>
         </thead>
         <tbody>
@@ -63,6 +71,24 @@
                   </div>
                 }
               </td>
+              @for (moduleName of modules; track moduleName) {
+                <td>
+                  @if (user.role === 'admin') {
+                    <span class="text-xs text-base-content/50">Acceso total</span>
+                  } @else {
+                    <select
+                      class="select select-bordered select-xs"
+                      [disabled]="savingUserId() === user.id"
+                      [value]="permissionValue(user, moduleName)"
+                      (change)="onPermissionChange(user, moduleName, $any($event.target).value)"
+                    >
+                      <option value="none">Sin acceso</option>
+                      <option value="viewer">Vista</option>
+                      <option value="editor">Editor</option>
+                    </select>
+                  }
+                </td>
+              }
             </tr>
           }
         </tbody>

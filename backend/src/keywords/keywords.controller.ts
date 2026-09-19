@@ -12,7 +12,8 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { Request } from 'express';
 import { AuditLogService } from '../audit/audit-log.service.js';
 import type { AuthenticatedUser } from '../auth/current-user.js';
-import { Roles } from '../auth/roles.decorator.js';
+import { ModuleAccessGuard } from '../auth/module-access.guard.js';
+import { RequireModule } from '../auth/module-access.decorator.js';
 import { RolesGuard } from '../auth/roles.guard.js';
 import { SupabaseAuthGuard } from '../auth/supabase-auth.guard.js';
 import { ColumnSpec, buildTemplateWorkbook, parseWorkbook } from '../common/excel.util.js';
@@ -27,7 +28,7 @@ const COLUMNS: ColumnSpec[] = [
   { header: 'Indexado (si/no)', key: 'indexed', width: 16, example: 'si' },
 ];
 
-@UseGuards(SupabaseAuthGuard, RolesGuard)
+@UseGuards(SupabaseAuthGuard, RolesGuard, ModuleAccessGuard)
 @Controller('keywords')
 export class KeywordsController {
   constructor(
@@ -35,6 +36,7 @@ export class KeywordsController {
     private readonly importBatches: ImportBatchesService,
   ) {}
 
+  @RequireModule('keywords')
   @Get()
   async list() {
     const { data, error } = await this.supabase.client
@@ -49,18 +51,20 @@ export class KeywordsController {
     return data;
   }
 
+  @RequireModule('keywords', 'editor')
   @Get('template')
   async downloadTemplate(): Promise<{ fileName: string; base64: string }> {
     const buffer = await buildTemplateWorkbook('Keywords', COLUMNS);
     return { fileName: 'plantilla-keywords.xlsx', base64: buffer.toString('base64') };
   }
 
+  @RequireModule('keywords')
   @Get('imports')
   listImports() {
     return this.importBatches.listForModule('keywords');
   }
 
-  @Roles('admin')
+  @RequireModule('keywords', 'editor')
   @Post('import')
   @UseInterceptors(FileInterceptor('file'))
   async import(

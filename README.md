@@ -8,7 +8,7 @@ Administración (roles + auditoría).
 
 - `frontend/` — Angular 22 (standalone components + signals) + Tailwind CSS + DaisyUI, cliente Supabase directo para auth/MFA.
 - `backend/` — NestJS 12, expone API propia para los módulos de datos (PPC/Search Terms/Listings/Admin/Audit), protegida con guard de Supabase.
-- `supabase/` — esquema SQL a correr en el SQL Editor del dashboard: `schema.sql` (roles) → `modules.sql` (PPC/Search Terms/Listings) → `audit.sql` (bitácora) → `mfa-recovery.sql` (códigos de recuperación) → `keywords.sql` (Keywords) → `account-lockout.sql` (índice para bloqueo de cuenta). Correr en ese orden.
+- `supabase/` — esquema SQL a correr en el SQL Editor del dashboard: `schema.sql` (roles) → `modules.sql` (PPC/Search Terms/Listings) → `audit.sql` (bitácora) → `mfa-recovery.sql` (códigos de recuperación) → `keywords.sql` (Keywords) → `account-lockout.sql` (índice para bloqueo de cuenta) → `module-permissions.sql` (permisos granulares por módulo). Correr en ese orden.
 - `render.yaml` — Blueprint de despliegue del backend en Render (ver sección "Despliegue" al final).
 
 ## 1. Crear el proyecto de Supabase
@@ -60,6 +60,7 @@ Por defecto corre en el puerto definido en `PORT` (`.env.example` trae `3300` pa
 ## Seguridad implementada
 
 - **Roles (RBAC)**: tabla `profiles` con `admin`/`user`, RLS en Supabase, guards en frontend (`admin.guard.ts`) y backend (`RolesGuard` + `@Roles()`). Un admin no puede cambiar su propio rol.
+- **Permisos granulares por módulo**: un usuario con rol `user` empieza **sin acceso a ningún módulo** (PPC, Search Terms, Keywords, Listings) hasta que un admin se lo asigna desde `/admin`, con nivel "Vista" (solo lectura, sin importar/crear/editar) o "Editor" (control total del módulo, incluida la carga masiva de Excel). Un admin siempre tiene acceso completo a todo y no pasa por esta matriz. Se aplica en tres capas: guard de ruta en Angular (`module-access.guard.ts`), guard de la API en NestJS (`ModuleAccessGuard` + `@RequireModule()`), y ocultamiento de botones/menús en la UI para quienes solo tienen "Vista". Listing Builder requiere nivel "Editor" sobre Listings (crear/editar es, por definición, una acción de edición).
 - **MFA/2FA (TOTP)**: vía `supabase.auth.mfa` nativo. Cualquier usuario puede activarlo desde "Seguridad (2FA)" en el sidebar; es **obligatorio** para el rol `admin` (`mfaEnforcementGuard` fuerza `/mfa-setup` si no lo tiene activo).
 - **Bitácora de auditoría inmutable** (`audit_log`): registra login y cambios de rol con usuario, IP y timestamp. Solo lectura para admins (visible en `/admin`), sin permiso de update/delete desde la API.
 - **Bloqueo de cuenta por fuerza bruta**: tras 5 intentos fallidos de login para el mismo correo en 15 minutos, el backend bloquea nuevos intentos (`POST /audit/login-lock-status`, consultado por el frontend antes de llamar a Supabase Auth) hasta 15 minutos después del último intento fallido. Es por cuenta, no por IP, así que no depende de qué red uses. Limitación conocida: como el login real va directo contra Supabase Auth (no por el backend), alguien que llame a la API de Supabase directamente, sin pasar por el frontend, evita este control — mitigarlo del todo requeriría mover el login a través del backend o activar CAPTCHA (hCaptcha/Turnstile) en Supabase.

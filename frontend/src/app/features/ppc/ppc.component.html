@@ -4,7 +4,7 @@
   <app-import-uploader
     [importUrl]="importUrl"
     [templateUrl]="templateUrl"
-    [canImport]="profile.isAdmin()"
+    [canImport]="permissions.canEdit('ppc')"
     (imported)="onImported()"
   />
 

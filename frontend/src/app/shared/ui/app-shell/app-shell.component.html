@@ -49,57 +49,67 @@
         </a>
       }
 
-      <a routerLink="/ppc" routerLinkActive="is-active" class="shell__nav-link">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M4 19V10M11 19V5M18 19v-7" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
-        @if (!collapsed()) {
-          <span>PPC</span>
-        }
-      </a>
+      @if (permissions.canView('ppc')) {
+        <a routerLink="/ppc" routerLinkActive="is-active" class="shell__nav-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 19V10M11 19V5M18 19v-7" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          @if (!collapsed()) {
+            <span>PPC</span>
+          }
+        </a>
+      }
 
-      <a routerLink="/search-terms" routerLinkActive="is-active" class="shell__nav-link">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="7" />
-          <path d="M21 21l-4.3-4.3" stroke-linecap="round" />
-        </svg>
-        @if (!collapsed()) {
-          <span>Search Terms</span>
-        }
-      </a>
+      @if (permissions.canView('search_terms')) {
+        <a routerLink="/search-terms" routerLinkActive="is-active" class="shell__nav-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="7" />
+            <path d="M21 21l-4.3-4.3" stroke-linecap="round" />
+          </svg>
+          @if (!collapsed()) {
+            <span>Search Terms</span>
+          }
+        </a>
+      }
 
-      <a routerLink="/listings" routerLinkActive="is-active" class="shell__nav-link">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="3" y="4" width="18" height="16" rx="1" />
-          <path d="M3 9h18M9 9v11" stroke-linecap="round" />
-        </svg>
-        @if (!collapsed()) {
-          <span>Listings</span>
-        }
-      </a>
+      @if (permissions.canView('listings')) {
+        <a routerLink="/listings" routerLinkActive="is-active" class="shell__nav-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="16" rx="1" />
+            <path d="M3 9h18M9 9v11" stroke-linecap="round" />
+          </svg>
+          @if (!collapsed()) {
+            <span>Listings</span>
+          }
+        </a>
+      }
 
-      <a routerLink="/keywords" routerLinkActive="is-active" class="shell__nav-link">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path
-            d="M20 12l-8 8-9-9V4h7l9 9z"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-          <circle cx="7.5" cy="7.5" r="1.2" fill="currentColor" stroke="none" />
-        </svg>
-        @if (!collapsed()) {
-          <span>Keywords</span>
-        }
-      </a>
+      @if (permissions.canView('keywords')) {
+        <a routerLink="/keywords" routerLinkActive="is-active" class="shell__nav-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path
+              d="M20 12l-8 8-9-9V4h7l9 9z"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <circle cx="7.5" cy="7.5" r="1.2" fill="currentColor" stroke="none" />
+          </svg>
+          @if (!collapsed()) {
+            <span>Keywords</span>
+          }
+        </a>
+      }
 
-      <a routerLink="/listing-builder" routerLinkActive="is-active" class="shell__nav-link">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 4v16M4 12h16" stroke-linecap="round" />
-        </svg>
-        @if (!collapsed()) {
-          <span>Listing Builder</span>
-        }
-      </a>
+      @if (permissions.canEdit('listings')) {
+        <a routerLink="/listing-builder" routerLinkActive="is-active" class="shell__nav-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 4v16M4 12h16" stroke-linecap="round" />
+          </svg>
+          @if (!collapsed()) {
+            <span>Listing Builder</span>
+          }
+        </a>
+      }
     </nav>
 
     <nav class="shell__nav">

@@ -16,7 +16,9 @@ import type { AuthenticatedUser } from '../auth/current-user.js';
 import { Roles } from '../auth/roles.decorator.js';
 import { RolesGuard } from '../auth/roles.guard.js';
 import { SupabaseAuthGuard } from '../auth/supabase-auth.guard.js';
+import { PermissionsService } from '../permissions/permissions.service.js';
 import { SupabaseService } from '../supabase/supabase.service.js';
+import { UpdatePermissionsDto } from './dto/update-permissions.dto.js';
 import { UpdateRoleDto } from './dto/update-role.dto.js';
 
 @UseGuards(SupabaseAuthGuard, RolesGuard)
@@ -26,20 +28,32 @@ export class AdminController {
   constructor(
     private readonly supabase: SupabaseService,
     private readonly auditLog: AuditLogService,
+    private readonly permissions: PermissionsService,
   ) {}
 
   @Get('users')
   async listUsers() {
-    const { data, error } = await this.supabase.client
-      .from('profiles')
-      .select('id, email, role')
-      .order('email');
+    return this.permissions.getAllWithPermissions();
+  }
 
-    if (error) {
-      throw new BadRequestException(error.message);
-    }
+  @Patch('users/:id/permissions')
+  async updatePermissions(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body() dto: UpdatePermissionsDto,
+    @Req() request: Request & { user: AuthenticatedUser },
+  ) {
+    const updated = await this.permissions.setPermissions(id, dto);
 
-    return data;
+    await this.auditLog.record({
+      userId: request.user.id,
+      action: 'permissions_updated',
+      entityType: 'profile',
+      entityId: id,
+      ipAddress: AuditLogService.extractIp(request),
+      metadata: { permissions: updated },
+    });
+
+    return updated;
   }
 
   @Patch('users/:id/role')

@@ -1,6 +1,7 @@
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { IdleService } from '../../../core/idle.service';
+import { PermissionsService } from '../../../core/permissions.service';
 import { ProfileService } from '../../../core/profile.service';
 import { SupabaseService } from '../../../core/supabase.service';
 
@@ -16,6 +17,7 @@ const STORAGE_KEY = 'sidebar-collapsed';
 export class AppShellComponent implements OnInit, OnDestroy {
   protected readonly supabase = inject(SupabaseService);
   protected readonly profile = inject(ProfileService);
+  protected readonly permissions = inject(PermissionsService);
   private readonly idle = inject(IdleService);
   private readonly router = inject(Router);
 

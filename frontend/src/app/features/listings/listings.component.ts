@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { environment } from '../../../environments/environment';
-import { ProfileService } from '../../core/profile.service';
+import { PermissionsService } from '../../core/permissions.service';
 import { ImportBatch } from '../../shared/models/import.model';
 import { Listing, isListingIncomplete, listingBullets } from '../../shared/models/listing.model';
 import { ImportHistoryComponent } from '../../shared/ui/import-history/import-history.component';
@@ -28,7 +28,7 @@ type CompletenessFilter = 'all' | 'complete' | 'incomplete';
 })
 export class ListingsComponent {
   private readonly http = inject(HttpClient);
-  protected readonly profile = inject(ProfileService);
+  protected readonly permissions = inject(PermissionsService);
 
   readonly importUrl = `${environment.apiUrl}/listings/import`;
   readonly templateUrl = `${environment.apiUrl}/listings/template`;
