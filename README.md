@@ -68,6 +68,10 @@ Por defecto corre en el puerto definido en `PORT` (`.env.example` trae `3300` pa
 - **Anti-inyección de fórmulas en Excel/CSV**: cualquier valor cargado que empiece con `=`, `+`, `-`, `@`, tab o CR se neutraliza (se antepone `'`) antes de guardarse, para prevenir CSV/Formula Injection si esos datos se vuelven a exportar y abrir en Excel.
 - **Cadena de suministro**: `npm run security:audit` (falla si hay vulnerabilidades altas/críticas) y `npm run sbom` (genera `sbom.json` en formato CycloneDX) en `frontend/` y `backend/`. Automatizado en cada push/PR vía `.github/workflows/security.yml`.
 
+### Pendiente por costo, no por diseño
+
+- **Point-in-Time Recovery (PITR) en Supabase**: da la posibilidad de restaurar la base de datos a cualquier segundo de los últimos días (ISO 27001 A.12.3, respaldo de información). **No se activó**: Supabase solo lo ofrece en el plan Pro de pago; el plan gratuito usado en este proyecto no lo incluye. El plan free sí hace backups diarios automáticos, pero sin PITR (solo restauración a esos puntos diarios, no a un momento exacto). Si el proyecto pasa a plan Pro, activarlo en **Project Settings → Database → Backups**.
+
 ## Despliegue
 
 ### Backend en Render
