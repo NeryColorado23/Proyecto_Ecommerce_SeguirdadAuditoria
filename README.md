@@ -102,3 +102,7 @@ El repo incluye `render.yaml` (Blueprint) con la configuración lista: build `np
    - En **Render** → tu servicio → **Environment** → `FRONTEND_URL` → cámbialo a `https://tu-proyecto.vercel.app,http://localhost:4300` (separado por coma) → guarda (Render redepliega solo).
    - En **Supabase** → **Authentication → URL Configuration** → agrega `https://tu-proyecto.vercel.app` a los **Redirect URLs** (necesario para que funcionen el reset de contraseña y "Continuar con Google").
 5. Prueba el login completo en la URL de Vercel: registro, login, 2FA, y algún módulo de datos — debería comportarse igual que en local, ahora contra el backend de Render.
+
+> **Ojo con la URL de Vercel que uses**: cada deploy nuevo genera una URL única con un hash (p. ej. `tu-proyecto-hjffmqftb-tu-usuario.vercel.app`), pero el dominio fijo del proyecto (el que no cambia entre deploys, algo como `tu-proyecto.vercel.app`) es el que debe ir en `FRONTEND_URL` (Render) y en Site URL/Redirect URLs (Supabase). Si pruebas la app en una URL de deploy que no está en ninguna de esas dos listas, vas a ver errores de CORS (a veces disfrazados de "CORS error" genérico en el navegador aunque el problema real sea otro) y fallos de MFA/reset de contraseña.
+>
+> URL de producción actual de este proyecto: `https://proyecto-ecommerce-seguirdad-audito.vercel.app`.
