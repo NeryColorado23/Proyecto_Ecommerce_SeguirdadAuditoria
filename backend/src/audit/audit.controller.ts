@@ -6,6 +6,7 @@ import { Roles } from '../auth/roles.decorator.js';
 import { RolesGuard } from '../auth/roles.guard.js';
 import { SupabaseAuthGuard } from '../auth/supabase-auth.guard.js';
 import { AuditLogService } from './audit-log.service.js';
+import { CheckLoginLockDto } from './dto/check-login-lock.dto.js';
 import { LogFailedLoginDto } from './dto/log-failed-login.dto.js';
 
 @Controller('audit')
@@ -37,6 +38,15 @@ export class AuditController {
       ipAddress: AuditLogService.extractIp(request),
     });
     return { ok: true };
+  }
+
+  // Sin guard: se consulta antes de tener sesión, para frenar el intento de
+  // login en el cliente sin gastar una llamada contra Supabase Auth. Mismo
+  // throttle que failed-login: es la misma superficie (correo sin sesión).
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @Post('login-lock-status')
+  async checkLoginLock(@Body() { email }: CheckLoginLockDto) {
+    return this.auditLog.getLoginLockStatus(email);
   }
 
   @UseGuards(SupabaseAuthGuard, RolesGuard)

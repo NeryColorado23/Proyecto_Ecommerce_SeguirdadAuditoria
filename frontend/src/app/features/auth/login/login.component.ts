@@ -43,6 +43,17 @@ export class LoginComponent {
     this.errorMessage.set(null);
 
     const { email, password } = this.form.getRawValue();
+
+    const lockStatus = await this.audit.checkLoginLock(email);
+    if (lockStatus.locked) {
+      this.loading.set(false);
+      const minutes = Math.ceil(lockStatus.retryAfterSeconds / 60);
+      this.errorMessage.set(
+        `Demasiados intentos fallidos. Intenta de nuevo en ${minutes} minuto${minutes === 1 ? '' : 's'}.`,
+      );
+      return;
+    }
+
     const { error } = await this.supabase.signInWithPassword(email, password);
 
     this.loading.set(false);

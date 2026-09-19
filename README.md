@@ -8,7 +8,7 @@ Administración (roles + auditoría).
 
 - `frontend/` — Angular 22 (standalone components + signals) + Tailwind CSS + DaisyUI, cliente Supabase directo para auth/MFA.
 - `backend/` — NestJS 12, expone API propia para los módulos de datos (PPC/Search Terms/Listings/Admin/Audit), protegida con guard de Supabase.
-- `supabase/` — esquema SQL a correr en el SQL Editor del dashboard: `schema.sql` (roles) → `modules.sql` (PPC/Search Terms/Listings) → `audit.sql` (bitácora) → `mfa-recovery.sql` (códigos de recuperación) → `keywords.sql` (Keywords). Correr en ese orden.
+- `supabase/` — esquema SQL a correr en el SQL Editor del dashboard: `schema.sql` (roles) → `modules.sql` (PPC/Search Terms/Listings) → `audit.sql` (bitácora) → `mfa-recovery.sql` (códigos de recuperación) → `keywords.sql` (Keywords) → `account-lockout.sql` (índice para bloqueo de cuenta). Correr en ese orden.
 - `render.yaml` — Blueprint de despliegue del backend en Render (ver sección "Despliegue" al final).
 
 ## 1. Crear el proyecto de Supabase
@@ -62,6 +62,7 @@ Por defecto corre en el puerto definido en `PORT` (`.env.example` trae `3300` pa
 - **Roles (RBAC)**: tabla `profiles` con `admin`/`user`, RLS en Supabase, guards en frontend (`admin.guard.ts`) y backend (`RolesGuard` + `@Roles()`). Un admin no puede cambiar su propio rol.
 - **MFA/2FA (TOTP)**: vía `supabase.auth.mfa` nativo. Cualquier usuario puede activarlo desde "Seguridad (2FA)" en el sidebar; es **obligatorio** para el rol `admin` (`mfaEnforcementGuard` fuerza `/mfa-setup` si no lo tiene activo).
 - **Bitácora de auditoría inmutable** (`audit_log`): registra login y cambios de rol con usuario, IP y timestamp. Solo lectura para admins (visible en `/admin`), sin permiso de update/delete desde la API.
+- **Bloqueo de cuenta por fuerza bruta**: tras 5 intentos fallidos de login para el mismo correo en 15 minutos, el backend bloquea nuevos intentos (`POST /audit/login-lock-status`, consultado por el frontend antes de llamar a Supabase Auth) hasta 15 minutos después del último intento fallido. Es por cuenta, no por IP, así que no depende de qué red uses. Limitación conocida: como el login real va directo contra Supabase Auth (no por el backend), alguien que llame a la API de Supabase directamente, sin pasar por el frontend, evita este control — mitigarlo del todo requeriría mover el login a través del backend o activar CAPTCHA (hCaptcha/Turnstile) en Supabase.
 - **Rate limiting**: `@nestjs/throttler` (100 req/min por IP) en toda la API del backend.
 - **Cabeceras de seguridad HTTP**: `helmet` en el backend (X-Content-Type-Options, X-Frame-Options, etc.).
 - **Anti-inyección de fórmulas en Excel/CSV**: cualquier valor cargado que empiece con `=`, `+`, `-`, `@`, tab o CR se neutraliza (se antepone `'`) antes de guardarse, para prevenir CSV/Formula Injection si esos datos se vuelven a exportar y abrir en Excel.
